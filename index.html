@@ -141,157 +141,166 @@
       </div>
     </section>
 
-    <!-- 3. GAMEPLAY SCREEN: VOCATYPE THEATER & YOUTYPE DICTATION -->
-    <section id="gameScreen" class="hidden py-2 animate-fade flex flex-col items-center">
+    <!-- 3. GAMEPLAY SCREEN (Side-by-Side: Video on Left, Typing & Stats on Right) -->
+    <section id="gameScreen" class="hidden py-3 animate-fade w-full max-w-7xl mx-auto px-4">
       
-      <!-- Top Bar: Song Info, Stats & Navigation -->
-      <div class="w-full w-full max-w-2xl flex items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-2 mb-2 shadow-lg">
-        <div class="flex items-center gap-3">
-          <button onclick="showScreen('levelSelectScreen')" class="text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-1 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700">
-            <span>←</span> Levels
-          </button>
-          <div class="truncate max-w-[200px] sm:max-w-xs md:max-w-md">
-            <h3 id="gameLevelTitle" class="text-sm font-extrabold text-white truncate">Shawn Mendes - Treat You Better</h3>
-            <span id="gameArtistLabel" class="text-[11px] font-semibold text-slate-400 truncate block">Pop Hit</span>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-4 md:gap-6 font-mono-code">
-          <!-- Line Counter (like LINE 2/45 in video) -->
-          <div class="text-right">
-            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Progress</span>
-            <span id="liveLineCounter" class="text-xs md:text-sm font-extrabold text-amber-400">LINE 1/10</span>
-          </div>
-          <!-- WPM -->
-          <div class="text-right">
-            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Speed</span>
-            <span id="liveWpm" class="text-xs md:text-sm font-extrabold text-indigo-400">0 WPM</span>
-          </div>
-          <!-- Accuracy -->
-          <div class="text-right">
-            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Accuracy</span>
-            <span id="liveAccuracy" class="text-xs md:text-sm font-extrabold text-emerald-400">100%</span>
-          </div>
-          <!-- Score -->
-          <div class="text-right hidden sm:block">
-            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Score</span>
-            <span id="liveScore" class="text-xs md:text-sm font-extrabold text-rose-400">0</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- CENTERED THEATER VIDEO PLAYER -->
-      <div class="w-full max-w-2xl relative bg-slate-950 rounded-2xl overflow-hidden border-2 border-slate-800 shadow-xl aspect-video max-h-[330px] mb-2">
-        <div id="ytPlayerContainer" class="w-full h-full"></div>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         
-        <!-- Discreet Pause Pill in corner -->
-        <div id="waitingOverlay" class="hidden absolute top-4 right-4 bg-slate-950/90 border border-amber-500/50 text-amber-400 px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 shadow-2xl pointer-events-none transition-all">
-          <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
-          <span>Waiting for your typing…</span>
-        </div>
-      </div>
-
-      <!-- TRANSPORT & MODE CONTROLS BAR (Right below video, just like VocaType) -->
-      <div class="w-full w-full max-w-2xl flex flex-wrap items-center justify-between gap-2.5 bg-slate-900/70 border border-slate-800/80 rounded-xl px-3.5 py-1.5 mb-2 text-xs text-slate-300">
-        
-        <!-- Playback Navigation (<, ||, ↺, >) -->
-        <div class="flex items-center gap-1.5">
-          <button onclick="prevLine()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700" title="Previous line">
-            <span>❮</span>
-          </button>
-          <button id="btnPlayPause" onclick="togglePlayPause()" class="p-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700" title="Play/Pause video">
-            <span class="text-base">⏸</span>
-          </button>
-          <button onclick="replayCurrentLine()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold transition" title="Replay line from start (Ctrl)">
-            <span>↺</span> Replay Line <span class="text-[10px] font-mono text-amber-400/80">[Ctrl]</span>
-          </button>
-          <button onclick="nextLine()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700" title="Next line (Tab)">
-            <span>❯</span>
-          </button>
-        </div>
-
-        <!-- Mode Switcher: VocaType Lyric Flow vs YouType Dictation -->
-        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
-          <button id="btnModeVocatype" onclick="switchMode('vocatype')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 shadow-md transition">
-            ⚡ Lyric Flow
-          </button>
-          <button id="btnModeDictation" onclick="switchMode('dictation')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition">
-            🎧 Dictation Mode
-          </button>
-        </div>
-
-        <!-- Translation & Pronounce Options -->
-        <div class="flex items-center gap-2">
-          <button onclick="toggleTranslation()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 font-semibold transition" title="Toggle translation subtitle">
-            🌐 Translation
-          </button>
-          <button onclick="sounds.speak(getCurrentLine()?.sentence || '')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 font-semibold transition" title="Pronounce line">
-            🔊 Pronounce
-          </button>
-        </div>
-      </div>
-
-      <!-- MAIN TYPING INTERACTION AREA -->
-      <div id="lyricDisplayArea" class="w-full max-w-2xl bg-slate-900/90 border-2 border-slate-800 rounded-2xl p-4 md:p-5 shadow-xl text-center flex flex-col items-center justify-center min-h-[130px] transition-all">
-        
-        <!-- A. VOCATYPE INLINE TYPING VIEW -->
-        <div id="vocatypeSection" class="w-full flex flex-col items-center justify-center gap-4">
-          <!-- Active lyric line with live character cursor -->
-          <div id="vocatypeSentenceContainer" class="font-mono-code text-2xl md:text-3xl font-extrabold tracking-wide leading-relaxed">
-            <!-- Dynamic lyric-char spans generated by app.js -->
-          </div>
-
-          <!-- Secondary Language Translation (e.g. Thai, Japanese, Spanish) -->
-          <p id="lyricTranslation" class="text-sm md:text-base font-medium text-slate-400 transition-all"></p>
-
-          <!-- Discreet input instruction -->
-          <div class="text-[11px] text-slate-500 flex items-center gap-3 pt-2 border-t border-slate-800/80">
-            <span>Type letters directly on your keyboard</span>
-            <span>•</span>
-            <span>Backspace to correct</span>
-            <span>•</span>
-            <span>Video pauses at phrase and advances only when full line is typed</span>
-          </div>
-        </div>
-
-        <!-- B. YOUTYPE DICTATION VIEW ("Listen and write what you hear") -->
-        <div id="dictationSection" class="hidden w-full flex flex-col items-center justify-center gap-5">
-          <!-- Audio Waveform Banner -->
-          <div class="flex flex-col items-center gap-2">
-            <div class="flex items-center gap-1.5 h-7">
-              <span class="waveform-bar"></span>
-              <span class="waveform-bar"></span>
-              <span class="waveform-bar"></span>
-              <span class="waveform-bar"></span>
-              <span class="waveform-bar"></span>
-              <span class="waveform-bar"></span>
+        <!-- LEFT COLUMN: Video Theater + Transport Controls (col-span-7) -->
+        <div class="lg:col-span-7 flex flex-col gap-3">
+          
+          <!-- VIDEO CONTAINER -->
+          <div class="w-full relative bg-slate-950 rounded-2xl overflow-hidden border-2 border-slate-800 shadow-2xl aspect-video">
+            <div id="ytPlayerContainer" class="w-full h-full"></div>
+            
+            <!-- Discreet Pause Pill in corner -->
+            <div id="waitingOverlay" class="hidden absolute top-4 right-4 bg-slate-950/90 border border-amber-500/50 text-amber-400 px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 shadow-2xl pointer-events-none transition-all">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+              <span>Waiting for your typing…</span>
             </div>
-            <h4 class="text-sm md:text-base font-bold text-slate-200 tracking-wide">
-              Listen and write what you hear
-            </h4>
-            <span id="dictationHintText" class="text-xs text-amber-400 font-mono-code font-bold">Word 1 of 5</span>
           </div>
 
-          <!-- Word Blank Slots -->
-          <div id="dictationSlotsContainer" class="flex flex-wrap items-center justify-center gap-2 my-2">
-            <!-- Dictation slots generated by app.js -->
+          <!-- TRANSPORT & CONTROLS BAR -->
+          <div class="w-full flex flex-wrap items-center justify-between gap-2 bg-slate-900/80 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-300 shadow-md">
+            <!-- Navigation buttons (<, ||, ↺, >) -->
+            <div class="flex items-center gap-1.5">
+              <button onclick="prevLine()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700" title="Previous line">
+                <span>❮</span>
+              </button>
+              <button id="btnPlayPause" onclick="togglePlayPause()" class="p-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700" title="Play/Pause video">
+                <span class="text-base">⏸</span>
+              </button>
+              <button onclick="replayCurrentLine()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold transition" title="Replay line from start (Ctrl)">
+                <span>↺</span> Replay <span class="text-[10px] font-mono text-amber-400/80">[Ctrl]</span>
+              </button>
+              <button onclick="nextLine()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700" title="Next line (Tab)">
+                <span>❯</span>
+              </button>
+            </div>
+
+            <!-- Mode Switcher -->
+            <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+              <button id="btnModeVocatype" onclick="switchMode('vocatype')" class="px-2.5 py-1 rounded-md text-xs font-bold bg-amber-500 text-slate-950 shadow transition">
+                ⚡ Lyric Flow
+              </button>
+              <button id="btnModeDictation" onclick="switchMode('dictation')" class="px-2.5 py-1 rounded-md text-xs font-bold text-slate-400 hover:text-white transition">
+                🎧 Dictation
+              </button>
+            </div>
+
+            <!-- Translation & Pronounce -->
+            <div class="flex items-center gap-1.5">
+              <button onclick="toggleTranslation()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 font-semibold transition" title="Toggle translation subtitle">
+                🌐
+              </button>
+              <button onclick="sounds.speak(getCurrentLine()?.sentence || '')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 font-semibold transition" title="Pronounce line">
+                🔊 Pronounce
+              </button>
+            </div>
           </div>
 
-          <!-- Hotkeys Helper Bar (like in YouType reference video) -->
-          <div class="flex flex-wrap items-center justify-center gap-3 text-xs text-slate-400 pt-3 border-t border-slate-800/80">
-            <button onclick="replayCurrentLine()" class="hover:text-amber-300 font-semibold flex items-center gap-1 bg-slate-800/70 px-2.5 py-1 rounded-lg border border-slate-700/60">
-              <kbd class="font-mono-code text-[10px] bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 text-slate-200">Ctrl</kbd> Replay line
-            </button>
-            <button onclick="giveDictationHint()" class="hover:text-amber-300 font-semibold flex items-center gap-1 bg-slate-800/70 px-2.5 py-1 rounded-lg border border-slate-700/60">
-              <kbd class="font-mono-code text-[10px] bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 text-slate-200">Ctrl+Shift</kbd> Hint for word
-            </button>
-            <span class="text-slate-500 font-semibold flex items-center gap-1">
-              <kbd class="font-mono-code text-[10px] bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 text-slate-200">Space</kbd> Next word
-            </span>
-            <button onclick="revealDictationAnswer()" class="hover:text-amber-300 font-semibold flex items-center gap-1 bg-slate-800/70 px-2.5 py-1 rounded-lg border border-slate-700/60">
-              <kbd class="font-mono-code text-[10px] bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 text-slate-200">Esc</kbd> Show answer
-            </button>
+        </div>
+
+        <!-- RIGHT COLUMN: Song Header + Live Stats + Typing Interaction Area (col-span-5) -->
+        <div class="lg:col-span-5 flex flex-col gap-3">
+          
+          <!-- Top Song Header & Live Stats Bar -->
+          <div class="w-full flex items-center justify-between gap-2 bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-2.5 shadow-md">
+            <div class="flex items-center gap-2.5 truncate">
+              <button onclick="showScreen('levelSelectScreen')" class="text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-1 bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-700 shrink-0">
+                <span>←</span>
+              </button>
+              <div class="truncate">
+                <h3 id="gameLevelTitle" class="text-sm font-extrabold text-white truncate">Shawn Mendes - Treat You Better</h3>
+                <span id="gameArtistLabel" class="text-[11px] font-semibold text-slate-400 truncate block">Pop Hit</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 md:gap-4 font-mono-code shrink-0">
+              <div class="text-right">
+                <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Line</span>
+                <span id="liveLineCounter" class="text-xs font-extrabold text-amber-400">1/10</span>
+              </div>
+              <div class="text-right">
+                <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Speed</span>
+                <span id="liveWpm" class="text-xs font-extrabold text-indigo-400">0 WPM</span>
+              </div>
+              <div class="text-right">
+                <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Accuracy</span>
+                <span id="liveAccuracy" class="text-xs font-extrabold text-emerald-400">100%</span>
+              </div>
+              <div class="text-right hidden sm:block">
+                <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Score</span>
+                <span id="liveScore" class="text-xs font-extrabold text-rose-400">0</span>
+              </div>
+            </div>
           </div>
+
+          <!-- MAIN TYPING INTERACTION AREA -->
+          <div id="lyricDisplayArea" class="w-full bg-slate-900/90 border-2 border-slate-800 rounded-2xl p-5 md:p-6 shadow-2xl text-center flex flex-col items-center justify-center min-h-[260px] lg:min-h-[300px] transition-all">
+            
+            <!-- A. VOCATYPE INLINE TYPING VIEW -->
+            <div id="vocatypeSection" class="w-full flex flex-col items-center justify-center gap-4">
+              <!-- Active lyric line with live character cursor -->
+              <div id="vocatypeSentenceContainer" class="font-mono-code text-xl md:text-2xl lg:text-3xl font-extrabold tracking-wide leading-relaxed">
+                <!-- Dynamic lyric-char spans generated by app.js -->
+              </div>
+
+              <!-- Secondary Language Translation -->
+              <p id="lyricTranslation" class="text-sm font-medium text-slate-400 transition-all"></p>
+
+              <!-- Discreet input instruction -->
+              <div class="text-[11px] text-slate-500 flex flex-wrap items-center justify-center gap-2 pt-3 border-t border-slate-800/80 w-full">
+                <span>Type directly on keyboard</span>
+                <span>•</span>
+                <span>Backspace to fix</span>
+                <span>•</span>
+                <span>Video stays paused until line is typed</span>
+              </div>
+            </div>
+
+            <!-- B. YOUTYPE DICTATION VIEW -->
+            <div id="dictationSection" class="hidden w-full flex flex-col items-center justify-center gap-4">
+              <!-- Audio Waveform Banner -->
+              <div class="flex flex-col items-center gap-1.5">
+                <div class="flex items-center gap-1.5 h-6">
+                  <span class="waveform-bar"></span>
+                  <span class="waveform-bar"></span>
+                  <span class="waveform-bar"></span>
+                  <span class="waveform-bar"></span>
+                  <span class="waveform-bar"></span>
+                  <span class="waveform-bar"></span>
+                </div>
+                <h4 class="text-sm font-bold text-slate-200 tracking-wide">
+                  Listen and write what you hear
+                </h4>
+                <span id="dictationHintText" class="text-xs text-amber-400 font-mono-code font-bold">Word 1 of 5</span>
+              </div>
+
+              <!-- Word Blank Slots -->
+              <div id="dictationSlotsContainer" class="flex flex-wrap items-center justify-center gap-2 my-2">
+                <!-- Dictation slots generated by app.js -->
+              </div>
+
+              <!-- Hotkeys Helper Bar -->
+              <div class="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-400 pt-3 border-t border-slate-800/80 w-full">
+                <button onclick="replayCurrentLine()" class="hover:text-amber-300 font-semibold flex items-center gap-1 bg-slate-800/70 px-2 py-0.5 rounded border border-slate-700/60 text-[11px]">
+                  <kbd class="font-mono-code text-[10px] bg-slate-900 px-1 py-0.5 rounded border border-slate-700 text-slate-200">Ctrl</kbd> Replay
+                </button>
+                <button onclick="giveDictationHint()" class="hover:text-amber-300 font-semibold flex items-center gap-1 bg-slate-800/70 px-2 py-0.5 rounded border border-slate-700/60 text-[11px]">
+                  <kbd class="font-mono-code text-[10px] bg-slate-900 px-1 py-0.5 rounded border border-slate-700 text-slate-200">Ctrl+Shift</kbd> Hint
+                </button>
+                <span class="text-slate-500 font-semibold flex items-center gap-1 text-[11px]">
+                  <kbd class="font-mono-code text-[10px] bg-slate-900 px-1 py-0.5 rounded border border-slate-700 text-slate-200">Space</kbd> Next
+                </span>
+                <button onclick="revealDictationAnswer()" class="hover:text-amber-300 font-semibold flex items-center gap-1 bg-slate-800/70 px-2 py-0.5 rounded border border-slate-700/60 text-[11px]">
+                  <kbd class="font-mono-code text-[10px] bg-slate-900 px-1 py-0.5 rounded border border-slate-700 text-slate-200">Esc</kbd> Reveal
+                </button>
+              </div>
+            </div>
+
+          </div>
+
         </div>
 
       </div>
