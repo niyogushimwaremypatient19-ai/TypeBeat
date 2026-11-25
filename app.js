@@ -819,6 +819,87 @@ async function loadCustomVideo() {
   }
 }
 
+
+function openCustomLyricModal(prefillVideoId = "") {
+  const currentInput = document.getElementById('customYtUrl')?.value?.trim() || "";
+  const videoId = prefillVideoId || extractYouTubeVideoId(currentInput) || "";
+  const modalYt = document.getElementById('modalYtUrl');
+  if (modalYt) modalYt.value = videoId ? `https://www.youtube.com/watch?v=${videoId}` : currentInput;
+  const modal = document.getElementById('customLyricsModal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeCustomLyricModal() {
+  const modal = document.getElementById('customLyricsModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function autoGenerateBeatTimings() {
+  const sampleVocab = ["rhythm", "melody", "harmony", "energy", "future", "feeling", "champion", "thunder", "sparkle"];
+  const generated = sampleVocab.map((w, idx) => {
+    const time = 12 + idx * 10;
+    return `[00:${time < 10 ? '0' + time : time}.00] Type the ${w} with the music beat`;
+  }).join('\n');
+  const textEl = document.getElementById('modalLyricsText');
+  if (textEl) textEl.value = generated;
+}
+
+function parseLrcOrRawLyrics(rawText) {
+  const lines = rawText.split('\n');
+  const cues = [];
+  let currentTime = 10;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    const timeMatch = trimmed.match(/\[(\d{1,2}):(\d{2})(?:\.(\d+))?\]/);
+    let lyricText = trimmed;
+
+    if (timeMatch) {
+      const minutes = parseInt(timeMatch[1], 10);
+      const seconds = parseInt(timeMatch[2], 10);
+      currentTime = minutes * 60 + seconds;
+      lyricText = trimmed.replace(/\[\d{1,2}:\d{2}(?:\.\d+)?\]/g, '').trim();
+    } else {
+      currentTime += 6;
+    }
+
+    if (!lyricText) continue;
+
+    const words = lyricText.split(/\s+/);
+    const targetWord = words.find(w => w.length > 3) || words[0] || 'beat';
+    const targetIdx = words.indexOf(targetWord);
+    const before = words.slice(0, targetIdx).join(' ');
+    const after = words.slice(targetIdx + 1).join(' ');
+
+    cues.push({
+      time: currentTime,
+      sentence: lyricText,
+      target: targetWord,
+      before,
+      after
+    });
+  }
+
+  return cues;
+}
+
+function applyModalLyricsAndStart() {
+  const urlInput = document.getElementById('modalYtUrl')?.value?.trim() || "";
+  const videoId = extractYouTubeVideoId(urlInput);
+  const text = document.getElementById('modalLyricsText')?.value?.trim() || "";
+
+  if (!videoId) return alert("Please provide a valid YouTube URL or ID.");
+  if (!text) return alert("Please paste lyrics or click 'Auto-Generate Beat Pacing'.");
+
+  const cues = parseLrcOrRawLyrics(text);
+  if (!cues.length) return alert("Could not parse words from lyrics. Try typing one line per sentence.");
+
+  closeCustomLyricModal();
+  applyCustomVideoCues(videoId, cues, "Custom Synced Song");
+}
+
 function applyCustomVideoCues(videoId, cues, title = 'Custom YouTube Practice') {
   const trackKey = state.currentTrackKey || 'youth';
   const customLevel = {
@@ -970,6 +1051,112 @@ function selectTrack(trackKey) {
   state.currentTrackKey = trackKey;
   renderLevelCards();
   showScreen('levelSelectScreen');
+}
+
+
+/* =========================================================================
+   UI RENDERING & SCREEN NAVIGATION
+   ========================================================================= */
+
+function renderLineUI() {
+  const lvl = getCurrentLevel();
+  if (!lvl) return;
+
+  // Line counter in header
+  const counterEl = document.getElementById('liveLineCounter');
+  if (counterEl) {
+    const totalLines = (lvl.lines && lvl.lines.length) ? lvl.lines.length : (lvl.words ? lvl.words.length : 1);
+    counterEl.textContent = `LINE ${state.currentLineIndex + 1}/${totalLines}`;
+  }
+
+  if (state.gameMode === 'vocatype') {
+    const vocaSec = document.getElementById('vocatypeSection');
+    const dictSec = document.getElementById('dictationSection');
+    if (vocaSec) vocaSec.classList.remove('hidden');
+    if (dictSec) dictSec.classList.add('hidden');
+    renderVocaTypeUI();
+  } else {
+    const vocaSec = document.getElementById('vocatypeSection');
+    const dictSec = document.getElementById('dictationSection');
+    if (vocaSec) vocaSec.classList.add('hidden');
+    if (dictSec) dictSec.classList.remove('hidden');
+    renderDictationUI();
+  }
+}
+
+function switchMode(newMode) {
+  state.gameMode = newMode;
+  state.charIndex = 0;
+  state.dictationWordIndex = 0;
+  state.dictationWordsTyped = [];
+
+  const btnVoca = document.getElementById('btnModeVocatype');
+  const btnDict = document.getElementById('btnModeDictation');
+
+  if (btnVoca && btnDict) {
+    if (newMode === 'vocatype') {
+      btnVoca.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 shadow-md';
+      btnDict.className = 'px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white';
+    } else {
+      btnDict.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 shadow-md';
+      btnVoca.className = 'px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white';
+    }
+  }
+
+  renderLineUI();
+}
+
+function toggleTranslation() {
+  state.showTranslation = !state.showTranslation;
+  const transEl = document.getElementById('lyricTranslation');
+  if (transEl) {
+    const line = getCurrentLine();
+    transEl.style.display = state.showTranslation && line && line.translation ? 'block' : 'none';
+  }
+}
+
+function updateLiveStats() {
+  // WPM calculation
+  const elapsedMinutes = (Date.now() - (state.startTime || Date.now())) / 60000;
+  const wordsTyped = (state.correctKeystrokes / 5);
+  const wpm = elapsedMinutes > 0 ? Math.round(wordsTyped / elapsedMinutes) : 0;
+  
+  // Accuracy calculation
+  const accuracy = state.totalKeystrokes > 0 
+    ? Math.round((state.correctKeystrokes / state.totalKeystrokes) * 100) 
+    : 100;
+
+  const wpmEl = document.getElementById('liveWpm');
+  if (wpmEl) wpmEl.textContent = `${wpm} WPM`;
+  const accEl = document.getElementById('liveAccuracy');
+  if (accEl) accEl.textContent = `${accuracy}%`;
+  const scoreEl = document.getElementById('liveScore');
+  if (scoreEl) scoreEl.textContent = state.score;
+}
+
+function finishLevel() {
+  if (state.player && state.player.pauseVideo) {
+    state.player.pauseVideo();
+  }
+  showScreen('doneScreen');
+
+  const accuracy = state.totalKeystrokes > 0 
+    ? Math.round((state.correctKeystrokes / state.totalKeystrokes) * 100) 
+    : 100;
+  
+  const finalScoreEl = document.getElementById('finalScore');
+  if (finalScoreEl) finalScoreEl.textContent = state.score;
+  const finalAccEl = document.getElementById('finalAccuracy');
+  if (finalAccEl) finalAccEl.textContent = `${accuracy}%`;
+  const finalWpmEl = document.getElementById('finalWpm');
+  const liveWpmEl = document.getElementById('liveWpm');
+  if (finalWpmEl && liveWpmEl) finalWpmEl.textContent = liveWpmEl.textContent;
+
+  if (window.confetti) {
+    try {
+      window.confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    } catch (e) {}
+  }
 }
 
 function renderLevelCards() {
