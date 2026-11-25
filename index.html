@@ -93,7 +93,7 @@
 
     <!-- 2. LEVEL SELECTION SCREEN -->
     <section id="levelSelectScreen" class="hidden py-6 animate-fade">
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <button onclick="showScreen('modeSelectScreen')" class="text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5 mb-2">
             <span>←</span> Back to Tracks
@@ -103,6 +103,9 @@
             <span id="trackBadge" class="text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">Track</span>
           </h2>
         </div>
+        <button onclick="resetDefaultTracks()" title="Restore original built-in songs if you deleted any" class="text-xs font-medium text-slate-400 hover:text-indigo-300 border border-slate-800 hover:border-indigo-500/40 bg-slate-900/80 px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+          <span>↺</span> Restore Default Songs
+        </button>
       </div>
 
       
@@ -233,6 +236,9 @@
                 <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Score</span>
                 <span id="liveScore" class="text-xs font-extrabold text-rose-400">0</span>
               </div>
+              <button onclick="deleteCurrentPlayingLevel()" title="Delete this video from track" class="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 border border-slate-800 hover:border-red-500/30 transition ml-1" aria-label="Delete video">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </button>
             </div>
           </div>
 
