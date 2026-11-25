@@ -145,7 +145,7 @@
     <section id="gameScreen" class="hidden py-2 animate-fade flex flex-col items-center">
       
       <!-- Top Bar: Song Info, Stats & Navigation -->
-      <div class="w-full max-w-4xl flex items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 rounded-2xl px-5 py-3 mb-4 shadow-xl">
+      <div class="w-full w-full max-w-2xl flex items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-2 mb-2 shadow-lg">
         <div class="flex items-center gap-3">
           <button onclick="showScreen('levelSelectScreen')" class="text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-1 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700">
             <span>←</span> Levels
@@ -181,7 +181,7 @@
       </div>
 
       <!-- CENTERED THEATER VIDEO PLAYER -->
-      <div class="w-full max-w-4xl relative bg-slate-950 rounded-3xl overflow-hidden border-2 border-slate-800 shadow-2xl aspect-video mb-3">
+      <div class="w-full max-w-2xl relative bg-slate-950 rounded-2xl overflow-hidden border-2 border-slate-800 shadow-xl aspect-video max-h-[330px] mb-2">
         <div id="ytPlayerContainer" class="w-full h-full"></div>
         
         <!-- Discreet Pause Pill in corner -->
@@ -192,7 +192,7 @@
       </div>
 
       <!-- TRANSPORT & MODE CONTROLS BAR (Right below video, just like VocaType) -->
-      <div class="w-full max-w-4xl flex flex-wrap items-center justify-between gap-3 bg-slate-900/70 border border-slate-800/80 rounded-2xl px-4 py-2.5 mb-6 text-xs text-slate-300">
+      <div class="w-full w-full max-w-2xl flex flex-wrap items-center justify-between gap-2.5 bg-slate-900/70 border border-slate-800/80 rounded-xl px-3.5 py-1.5 mb-2 text-xs text-slate-300">
         
         <!-- Playback Navigation (<, ||, ↺, >) -->
         <div class="flex items-center gap-1.5">
@@ -232,7 +232,7 @@
       </div>
 
       <!-- MAIN TYPING INTERACTION AREA -->
-      <div id="lyricDisplayArea" class="w-full max-w-4xl bg-slate-900/90 border-2 border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl text-center flex flex-col items-center justify-center min-h-[180px] transition-all">
+      <div id="lyricDisplayArea" class="w-full max-w-2xl bg-slate-900/90 border-2 border-slate-800 rounded-2xl p-4 md:p-5 shadow-xl text-center flex flex-col items-center justify-center min-h-[130px] transition-all">
         
         <!-- A. VOCATYPE INLINE TYPING VIEW -->
         <div id="vocatypeSection" class="w-full flex flex-col items-center justify-center gap-4">
@@ -250,7 +250,7 @@
             <span>•</span>
             <span>Backspace to correct</span>
             <span>•</span>
-            <span>Video unpauses automatically when line finishes</span>
+            <span>Video pauses at phrase and advances only when full line is typed</span>
           </div>
         </div>
 
