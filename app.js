@@ -129,7 +129,9 @@ function onYouTubeIframeAPIReady() {
       controls: 1,
       rel: 0,
       modestbranding: 1,
-      disablekb: 1
+      disablekb: 1,
+      cc_load_policy: 1,
+      cc_lang_pref: 'en'
     },
     events: {
       onReady: () => {
@@ -396,16 +398,7 @@ function handleVocaTypeKey(key) {
     state.charIndex++;
     renderVocaTypeUI();
 
-    // If video was paused because of a typo, resume video if before line pause boundary
-    if (state.isPausedForInput && state.isPlayerReady && state.player) {
-      const curTime = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
-      const pauseBoundary = Math.max(0, line.pause + state.syncOffset);
-      if (curTime < pauseBoundary) {
-        state.isPausedForInput = false;
-        showPausePill(false);
-        state.player.playVideo();
-      }
-    }
+
 
     // Check if entire line completed
     if (state.charIndex >= sentence.length) {
