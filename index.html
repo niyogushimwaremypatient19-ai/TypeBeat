@@ -5,192 +5,127 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>TypeBeat - Video & Music Typing Game</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <style>
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-    .font-mono-code {
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .letter-tile {
-      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .letter-tile.active {
-      transform: translateY(-2px);
-      box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
-    }
-    .letter-tile.shake {
-      animation: shake 0.3s ease-in-out;
-    }
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-4px); }
-      40%, 80% { transform: translateX(4px); }
-    }
-    .pulse-glow {
-      animation: pulseGlow 2s infinite;
-    }
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
-      50% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.8); }
-    }
-    /* Custom scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0f172a;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #475569;
-    }
-  </style>
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
 
-  <!-- Top Navigation & Global Score Bar -->
-  <header class="border-b border-slate-800/80 bg-slate-900/70 backdrop-blur sticky top-0 z-50 px-4 py-3">
+  <!-- TOP HEADER -->
+  <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur sticky top-0 z-50 px-4 py-3">
     <div class="max-w-6xl mx-auto flex items-center justify-between">
       <div class="flex items-center gap-3 cursor-pointer" onclick="showScreen('modeSelectScreen')">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-indigo-500 flex items-center justify-center text-xl shadow-lg shadow-indigo-500/20">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-indigo-500 flex items-center justify-center text-lg shadow-lg shadow-amber-500/20">
           ⚡
         </div>
         <div>
-          <span class="text-xl font-black tracking-tight text-white flex items-center gap-2">
-            TypeBeat <span class="text-xs uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">Pro</span>
+          <span class="text-lg font-black tracking-tight text-white flex items-center gap-2">
+            TypeBeat <span class="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">Pro</span>
           </span>
-          <p class="text-xs text-slate-400 font-medium">Video & Lyric Typing Arcade</p>
         </div>
       </div>
 
-      <!-- Live Player Stats -->
-      <div class="flex items-center gap-3 md:gap-5">
-        <div class="flex items-center gap-1.5 bg-slate-800/90 border border-slate-700/60 rounded-full px-3.5 py-1.5 text-sm font-bold shadow-inner">
-          <span class="text-amber-400">⭐</span>
-          <span id="globalStars" class="text-white">0</span>
-          <span class="text-slate-400 text-xs font-semibold ml-0.5">stars</span>
-        </div>
-        <div class="flex items-center gap-1.5 bg-slate-800/90 border border-slate-700/60 rounded-full px-3.5 py-1.5 text-sm font-bold shadow-inner">
-          <span class="text-rose-400">🔥</span>
-          <span id="globalStreak" class="text-white">0</span>
-          <span class="text-slate-400 text-xs font-semibold ml-0.5">streak</span>
-        </div>
-        <button id="soundToggleBtn" onclick="toggleAudio()" class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 hover:bg-slate-700 flex items-center justify-center text-slate-300 text-sm transition" title="Toggle Sound FX">
-          🔊
+      <div class="flex items-center gap-4">
+        <!-- Audio effects toggle -->
+        <button onclick="sounds.enabled = !sounds.enabled; this.textContent = sounds.enabled ? '🔊 Sound On' : '🔇 Muted';" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+          🔊 Sound On
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Main Container -->
+  <!-- MAIN VIEWPORT CONTAINER -->
   <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 flex flex-col justify-center">
 
-    <!-- 1. AGE / AUDIENCE SELECTION SCREEN -->
-    <section id="modeSelectScreen" class="py-8 animate-fade">
-      <div class="text-center max-w-2xl mx-auto mb-10">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold uppercase tracking-wider mb-4">
-          Interactive Typing Challenge
+    <!-- 1. AGE TRACK SELECTION SCREEN -->
+    <section id="modeSelectScreen" class="py-12 animate-fade">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold uppercase tracking-wider mb-4">
+          VocaType & YouType Unified Engine
         </div>
         <h1 class="text-3xl md:text-5xl font-black text-white tracking-tight mb-4">
-          Type Along With Your <span class="bg-gradient-to-r from-amber-400 via-rose-400 to-indigo-400 bg-clip-text text-transparent">Favorite Videos</span>
+          Master Typing With <span class="bg-gradient-to-r from-amber-400 via-rose-400 to-indigo-400 bg-clip-text text-transparent">Music & Video</span>
         </h1>
         <p class="text-slate-400 text-base md:text-lg">
-          Pick your track below. Watch songs, movie trailers, and cartoons while typing the lyrics in real time!
+          Practice typing synchronized with YouTube music videos. Watch the video, let it pause on each line, and type directly on the screen to unpause!
         </p>
       </div>
 
       <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        <!-- Kids Card -->
-        <div onclick="selectAgeTrack('kids')" class="group cursor-pointer relative overflow-hidden rounded-3xl bg-gradient-to-b from-slate-800/80 to-slate-900/90 border-2 border-slate-800 hover:border-amber-400/80 p-8 transition-all duration-300 hover:scale-[1.02] shadow-2xl hover:shadow-amber-500/10">
-          <div class="absolute -right-8 -top-8 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition"></div>
+        <!-- Youth Card (Shawn Mendes etc) -->
+        <div onclick="selectTrack('youth')" class="group cursor-pointer relative overflow-hidden rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-slate-800 hover:border-amber-400 p-8 transition-all duration-300 hover:scale-[1.02] shadow-2xl">
           <div class="flex items-start justify-between mb-6">
-            <span class="text-5xl">🎈</span>
-            <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300">
-              Ages 8–15
+            <span class="text-5xl">🎧</span>
+            <span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              VocaType Reference
             </span>
           </div>
-          <h3 class="text-2xl font-black text-white group-hover:text-amber-300 transition mb-2">Kids Arcade</h3>
+          <h2 class="text-2xl font-black text-white mb-2 group-hover:text-amber-400 transition">Youth & Trending Hits</h2>
           <p class="text-slate-400 text-sm mb-6 leading-relaxed">
-            Fun cartoon songs, Disney hits like <span class="text-slate-300 font-semibold">Frozen</span>, and animated movie trailers with helpful letter hints and friendly pacing.
+            Includes Shawn Mendes <em>Treat You Better</em>, Imagine Dragons <em>Believer</em>, and dialogue from top trailers.
           </p>
-          <div class="flex items-center gap-4 text-xs font-semibold text-slate-400 border-t border-slate-800 pt-4">
-            <span class="flex items-center gap-1.5"><span class="text-emerald-400">●</span> 3 Difficulty Levels</span>
-            <span class="flex items-center gap-1.5"><span class="text-amber-400">●</span> Smart Auto-Pause</span>
-            <span class="flex items-center gap-1.5"><span class="text-indigo-400">●</span> Voice Assist</span>
+          <div class="flex items-center text-amber-400 text-sm font-bold gap-2">
+            <span>Explore Levels</span>
+            <span>→</span>
           </div>
         </div>
 
-        <!-- Youth Card -->
-        <div onclick="selectAgeTrack('youth')" class="group cursor-pointer relative overflow-hidden rounded-3xl bg-gradient-to-b from-slate-800/80 to-slate-900/90 border-2 border-slate-800 hover:border-indigo-400/80 p-8 transition-all duration-300 hover:scale-[1.02] shadow-2xl hover:shadow-indigo-500/10">
-          <div class="absolute -right-8 -top-8 w-36 h-36 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition"></div>
+        <!-- Kids Card (Frozen / Moana) -->
+        <div onclick="selectTrack('kids')" class="group cursor-pointer relative overflow-hidden rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-slate-800 hover:border-indigo-400 p-8 transition-all duration-300 hover:scale-[1.02] shadow-2xl">
           <div class="flex items-start justify-between mb-6">
-            <span class="text-5xl">🔥</span>
-            <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-indigo-400/10 border border-indigo-400/30 text-indigo-300">
-              Youth 16+
+            <span class="text-5xl">🎈</span>
+            <span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              Kids Track
             </span>
           </div>
-          <h3 class="text-2xl font-black text-white group-hover:text-indigo-300 transition mb-2">Youth Beats & Trailers</h3>
+          <h2 class="text-2xl font-black text-white mb-2 group-hover:text-indigo-400 transition">Animated Classics</h2>
           <p class="text-slate-400 text-sm mb-6 leading-relaxed">
-            Pop music hits like <span class="text-slate-300 font-semibold">Shawn Mendes</span>, blockbuster movie trailers, and high-speed typing beats to push your speed and accuracy.
+            Sing and type along with <em>Frozen - Let It Go</em> and <em>Moana - How Far I'll Go</em>.
           </p>
-          <div class="flex items-center gap-4 text-xs font-semibold text-slate-400 border-t border-slate-800 pt-4">
-            <span class="flex items-center gap-1.5"><span class="text-emerald-400">●</span> Real-time WPM Meter</span>
-            <span class="flex items-center gap-1.5"><span class="text-indigo-400">●</span> Combo Multipliers</span>
-            <span class="flex items-center gap-1.5"><span class="text-rose-400">●</span> Fast Lyric Sync</span>
+          <div class="flex items-center text-indigo-400 text-sm font-bold gap-2">
+            <span>Explore Levels</span>
+            <span>→</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 2. LEVEL & VIDEO SELECTION SCREEN -->
-    <section id="levelSelectScreen" class="hidden py-4 animate-fade">
-      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <button onclick="showScreen('modeSelectScreen')" class="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-white transition bg-slate-900 px-4 py-2 rounded-xl border border-slate-800">
-          <span>←</span> Back to Tracks
-        </button>
-        <div id="trackBadge" class="px-3.5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
-          Kids Track
+    <!-- 2. LEVEL SELECTION SCREEN -->
+    <section id="levelSelectScreen" class="hidden py-6 animate-fade">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <button onclick="showScreen('modeSelectScreen')" class="text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5 mb-2">
+            <span>←</span> Back to Tracks
+          </button>
+          <h2 class="text-2xl font-black text-white flex items-center gap-3">
+            Select Song Level
+            <span id="trackBadge" class="text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">Track</span>
+          </h2>
         </div>
       </div>
 
-      <div class="text-center max-w-xl mx-auto mb-8">
-        <h2 class="text-2xl md:text-3xl font-black text-white tracking-tight mb-2">Choose Your Stage</h2>
-        <p class="text-slate-400 text-sm">Levels become progressively faster with longer phrases as you advance.</p>
-      </div>
-
-      <!-- Level Cards Grid -->
-      <div id="levelList" class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-        <!-- Rendered dynamically -->
-      </div>
-
-      <!-- Custom Video / URL Bar -->
-      <div class="mt-10 max-w-2xl mx-auto bg-slate-900/95 border border-indigo-500/30 rounded-3xl p-6 shadow-2xl text-center relative overflow-hidden backdrop-blur-md">
-        <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
-        <div class="flex items-center justify-center gap-2 mb-1">
-          <span class="text-2xl">📺</span>
-          <h4 class="font-black text-base text-white tracking-tight">Want to type ANY YouTube video?</h4>
-          <span class="bg-indigo-500/20 text-indigo-400 border border-indigo-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Auto-Sync</span>
+      
+      <!-- Auto-Sync & Custom YouTube Video Banner -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-950/70 via-purple-950/40 to-slate-900/80 border-2 border-indigo-500/40 p-5 md:p-6 mb-6 shadow-2xl backdrop-blur">
+        <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">📺</span>
+            <h4 class="font-black text-base text-white tracking-tight">Want to type ANY YouTube video?</h4>
+            <span class="bg-indigo-500/20 text-indigo-400 border border-indigo-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Auto-Sync</span>
+          </div>
         </div>
-        <p class="text-xs text-slate-400 mb-4 max-w-lg mx-auto">
-          Paste any YouTube song, music video, or trailer. We automatically extract and sync the real subtitles & timestamps so you type in rhythm with the beat!
+        <p class="text-xs text-slate-300 mb-4 max-w-xl">
+          Paste any YouTube song, music video, or trailer. We automatically extract and sync the real subtitles & timestamps so you can type in rhythm with the beat!
         </p>
 
         <div class="flex flex-col sm:flex-row gap-2.5">
-          <input id="customYtUrl" type="text" placeholder="https://www.youtube.com/watch?v=... or YouTube ID" class="flex-1 bg-slate-950 border border-slate-700/80 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 rounded-2xl px-4 py-3 text-xs text-white outline-none transition placeholder-slate-500 font-mono-code">
-          <button id="customPlayBtn" onclick="loadCustomVideo()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs px-5 py-3 rounded-2xl shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition flex items-center justify-center gap-2 whitespace-nowrap">
+          <input id="customYtUrl" type="text" placeholder="https://www.youtube.com/watch?v=... or YouTube video ID" class="flex-1 bg-slate-950/90 border border-slate-700/80 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 rounded-2xl px-4 py-3 text-xs text-white outline-none font-mono-code transition placeholder:text-slate-500">
+          <button onclick="loadCustomVideo()" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-extrabold text-xs px-5 py-3 rounded-2xl shadow-lg shadow-indigo-500/40 transition flex items-center justify-center gap-2 whitespace-nowrap">
             <span id="customBtnSpinner" class="hidden animate-spin">⏳</span>
             <span id="customBtnText">Sync & Play</span>
           </button>
-          <button onclick="openCustomLyricModal()" class="bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs px-3.5 py-3 rounded-2xl border border-slate-700 transition flex items-center justify-center gap-1.5 whitespace-nowrap" title="Paste lyrics or timed LRC text directly">
+          <button onclick="openCustomLyricModal()" class="bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white font-bold text-xs px-4 py-3 rounded-2xl border border-slate-700 transition flex items-center justify-center gap-1.5 whitespace-nowrap" title="Paste lyrics or timed LRC text directly">
             <span>📝</span> Paste Lyrics
           </button>
         </div>
@@ -200,1258 +135,205 @@
           <span id="customStatusText" class="text-slate-300"></span>
         </div>
       </div>
+
+      <div id="levelList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Level cards populated dynamically by app.js -->
+      </div>
     </section>
 
-    <!-- 3. GAMEPLAY SCREEN (VIDEO + LYRIC TYPING INTERFACE) -->
-    <section id="gameScreen" class="hidden py-2 animate-fade flex flex-col gap-4">
+    <!-- 3. GAMEPLAY SCREEN: VOCATYPE THEATER & YOUTYPE DICTATION -->
+    <section id="gameScreen" class="hidden py-2 animate-fade flex flex-col items-center">
       
-      <!-- Top Game Bar -->
-      <div class="flex items-center justify-between gap-3 bg-slate-900/80 border border-slate-800 rounded-2xl px-4 py-2.5">
+      <!-- Top Bar: Song Info, Stats & Navigation -->
+      <div class="w-full max-w-4xl flex items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 rounded-2xl px-5 py-3 mb-4 shadow-xl">
         <div class="flex items-center gap-3">
-          <button onclick="exitGameToLevels()" class="text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5 bg-slate-800/80 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700">
+          <button onclick="showScreen('levelSelectScreen')" class="text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-1 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700">
             <span>←</span> Levels
           </button>
-          <div>
-            <h3 id="gameLevelTitle" class="text-sm font-extrabold text-white truncate max-w-[200px] md:max-w-md">Level 1: Frozen - Let It Go</h3>
-            <span id="gameDifficultyLabel" class="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Beginner • Smart Pause On</span>
+          <div class="truncate max-w-[200px] sm:max-w-xs md:max-w-md">
+            <h3 id="gameLevelTitle" class="text-sm font-extrabold text-white truncate">Shawn Mendes - Treat You Better</h3>
+            <span id="gameArtistLabel" class="text-[11px] font-semibold text-slate-400 truncate block">Pop Hit</span>
           </div>
         </div>
 
-        <div class="flex items-center gap-3 md:gap-5">
-          <!-- WPM Gauge -->
+        <div class="flex items-center gap-4 md:gap-6 font-mono-code">
+          <!-- Line Counter (like LINE 2/45 in video) -->
           <div class="text-right">
-            <span class="text-[10px] uppercase font-bold text-slate-400 block">Speed</span>
-            <span id="liveWpm" class="text-sm font-mono-code font-bold text-indigo-400">0 WPM</span>
+            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Progress</span>
+            <span id="liveLineCounter" class="text-xs md:text-sm font-extrabold text-amber-400">LINE 1/10</span>
           </div>
-          <!-- Accuracy Gauge -->
+          <!-- WPM -->
           <div class="text-right">
-            <span class="text-[10px] uppercase font-bold text-slate-400 block">Accuracy</span>
-            <span id="liveAccuracy" class="text-sm font-mono-code font-bold text-emerald-400">100%</span>
+            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Speed</span>
+            <span id="liveWpm" class="text-xs md:text-sm font-extrabold text-indigo-400">0 WPM</span>
           </div>
-          <!-- Current Level Score -->
+          <!-- Accuracy -->
           <div class="text-right">
-            <span class="text-[10px] uppercase font-bold text-slate-400 block">Score</span>
-            <span id="liveScore" class="text-sm font-mono-code font-bold text-amber-400">0</span>
+            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Accuracy</span>
+            <span id="liveAccuracy" class="text-xs md:text-sm font-extrabold text-emerald-400">100%</span>
+          </div>
+          <!-- Score -->
+          <div class="text-right hidden sm:block">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Score</span>
+            <span id="liveScore" class="text-xs md:text-sm font-extrabold text-rose-400">0</span>
           </div>
         </div>
       </div>
 
-      <!-- Main Play Area: Video on top, Synced Lyrics & Typing below -->
-      <div class="grid lg:grid-cols-12 gap-6 items-start">
+      <!-- CENTERED THEATER VIDEO PLAYER -->
+      <div class="w-full max-w-4xl relative bg-slate-950 rounded-3xl overflow-hidden border-2 border-slate-800 shadow-2xl aspect-video mb-3">
+        <div id="ytPlayerContainer" class="w-full h-full"></div>
         
-        <!-- Video Container (Left/Top) -->
-        <div class="lg:col-span-7 flex flex-col gap-3">
-          <div class="relative bg-slate-900 rounded-3xl overflow-hidden border-2 border-slate-800 shadow-2xl aspect-video w-full">
-            <div id="ytPlayerContainer" class="w-full h-full"></div>
-            
-            <!-- Discreet pause pill: leaves video 100% unobstructed, crystal-clear, and unblurred -->
-            <div id="waitingOverlay" class="hidden absolute top-3 right-3 bg-slate-900/85 border border-amber-500/40 text-amber-300 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-xl pointer-events-none transition-all">
-              <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-              <span>Paused</span>
-            </div>
+        <!-- Discreet Pause Pill in corner -->
+        <div id="waitingOverlay" class="hidden absolute top-4 right-4 bg-slate-950/90 border border-amber-500/50 text-amber-400 px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 shadow-2xl pointer-events-none transition-all">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+          <span>Waiting for your typing…</span>
+        </div>
+      </div>
+
+      <!-- TRANSPORT & MODE CONTROLS BAR (Right below video, just like VocaType) -->
+      <div class="w-full max-w-4xl flex flex-wrap items-center justify-between gap-3 bg-slate-900/70 border border-slate-800/80 rounded-2xl px-4 py-2.5 mb-6 text-xs text-slate-300">
+        
+        <!-- Playback Navigation (<, ||, ↺, >) -->
+        <div class="flex items-center gap-1.5">
+          <button onclick="prevLine()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700" title="Previous line">
+            <span>❮</span>
+          </button>
+          <button id="btnPlayPause" onclick="togglePlayPause()" class="p-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700" title="Play/Pause video">
+            <span class="text-base">⏸</span>
+          </button>
+          <button onclick="replayCurrentLine()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold transition" title="Replay line from start (Ctrl)">
+            <span>↺</span> Replay Line <span class="text-[10px] font-mono text-amber-400/80">[Ctrl]</span>
+          </button>
+          <button onclick="nextLine()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700" title="Next line (Tab)">
+            <span>❯</span>
+          </button>
+        </div>
+
+        <!-- Mode Switcher: VocaType Lyric Flow vs YouType Dictation -->
+        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <button id="btnModeVocatype" onclick="switchMode('vocatype')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 shadow-md transition">
+            ⚡ Lyric Flow
+          </button>
+          <button id="btnModeDictation" onclick="switchMode('dictation')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition">
+            🎧 Dictation Mode
+          </button>
+        </div>
+
+        <!-- Translation & Pronounce Options -->
+        <div class="flex items-center gap-2">
+          <button onclick="toggleTranslation()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 font-semibold transition" title="Toggle translation subtitle">
+            🌐 Translation
+          </button>
+          <button onclick="sounds.speak(getCurrentLine()?.sentence || '')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 font-semibold transition" title="Pronounce line">
+            🔊 Pronounce
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN TYPING INTERACTION AREA -->
+      <div id="lyricDisplayArea" class="w-full max-w-4xl bg-slate-900/90 border-2 border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl text-center flex flex-col items-center justify-center min-h-[180px] transition-all">
+        
+        <!-- A. VOCATYPE INLINE TYPING VIEW -->
+        <div id="vocatypeSection" class="w-full flex flex-col items-center justify-center gap-4">
+          <!-- Active lyric line with live character cursor -->
+          <div id="vocatypeSentenceContainer" class="font-mono-code text-2xl md:text-3xl font-extrabold tracking-wide leading-relaxed">
+            <!-- Dynamic lyric-char spans generated by app.js -->
           </div>
 
-          <!-- Video Transport & Audio Assist Controls -->
-          <div class="flex items-center justify-between text-xs text-slate-400 px-2">
-            <div class="flex items-center gap-2">
-              <button onclick="replayCurrentPhrase()" class="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-xl border border-slate-700 font-semibold transition" title="Replay line from start">
-                <span>↺</span> Replay Line
-              </button>
-              <button onclick="speakCurrentWord()" class="flex items-center gap-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-xl font-semibold transition" title="Hear word pronounced">
-                <span>🔊</span> Pronounce
-              </button>
-              <button onclick="skipWord()" class="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl border border-slate-700 font-semibold transition" title="Skip current word">
-                <span>⏭</span> Skip (Tab)
-              </button>
-            </div>
+          <!-- Secondary Language Translation (e.g. Thai, Japanese, Spanish) -->
+          <p id="lyricTranslation" class="text-sm md:text-base font-medium text-slate-400 transition-all"></p>
 
-            <!-- Smart Auto-Pause Toggle -->
-            <label class="flex items-center gap-2 cursor-pointer select-none text-slate-300 font-medium">
-              <input type="checkbox" id="smartPauseCheckbox" checked onchange="toggleSmartPause()" class="rounded bg-slate-800 border-slate-700 text-indigo-500 focus:ring-0">
-              <span class="text-[11px]">Auto-pause for words</span>
-            </label>
-          </div>
-          <div class="flex items-center justify-end gap-2 px-2 text-[11px] text-slate-400">
-            <span>Lyric sync</span>
-            <button onclick="adjustSyncOffset(-0.25)" class="rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 hover:bg-slate-700 text-slate-200" title="Move lyric cues earlier">−0.25s</button>
-            <span id="syncOffsetLabel" class="min-w-[48px] text-center font-mono-code text-indigo-300">0.00s</span>
-            <button onclick="adjustSyncOffset(0.25)" class="rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 hover:bg-slate-700 text-slate-200" title="Move lyric cues later">+0.25s</button>
-            <button onclick="resetSyncOffset()" class="rounded-lg px-2 py-1 text-slate-400 hover:text-white" title="Reset this video's sync adjustment">Reset</button>
-            <button onclick="openLiveTimingModal()" class="ml-1 rounded-lg border border-indigo-500/40 bg-indigo-950/60 hover:bg-indigo-900/80 px-2.5 py-1 text-indigo-300 text-[11px] font-bold transition flex items-center gap-1" title="View, calibrate, or capture timestamps for all words in this song">
-              <span>⏱️</span> Edit Timings
-            </button>
+          <!-- Discreet input instruction -->
+          <div class="text-[11px] text-slate-500 flex items-center gap-3 pt-2 border-t border-slate-800/80">
+            <span>Type letters directly on your keyboard</span>
+            <span>•</span>
+            <span>Backspace to correct</span>
+            <span>•</span>
+            <span>Video unpauses automatically when line finishes</span>
           </div>
         </div>
 
-        <!-- Lyrics & Typing Game Box (Right/Bottom) -->
-        <div class="lg:col-span-5 flex flex-col gap-4 bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl">
-          
-          <!-- Line Header & Visual Emoji / Context -->
-          <div class="flex items-center justify-between">
-            <span id="phraseCounter" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Line 1 of 6</span>
-            <div id="comboBadge" class="hidden items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-400 text-xs font-black animate-pulse">
-              🔥 <span id="comboCount">2</span>X COMBO!
-            </div>
-          </div>
-
-          <!-- Active Lyric Line Display (Karaoke style) -->
-          <div class="bg-slate-950/80 rounded-2xl p-5 border border-slate-800 text-center flex flex-col gap-3 min-h-[140px] justify-center">
-            <p id="prevLyricText" class="text-xs font-medium text-slate-500 truncate h-4"></p>
-            
-            <!-- Highlighted current line with target word blanked or underscored -->
-            <div id="activeLyricSentence" class="text-lg md:text-xl font-bold leading-relaxed text-slate-200">
-              <!-- Rendered as words with target blanked -->
-            </div>
-
-            <p id="nextLyricText" class="text-xs font-medium text-slate-600 truncate h-4"></p>
-          </div>
-
-          <!-- Letter Fill-In Boxes (like the reference video!) -->
+        <!-- B. YOUTYPE DICTATION VIEW ("Listen and write what you hear") -->
+        <div id="dictationSection" class="hidden w-full flex flex-col items-center justify-center gap-5">
+          <!-- Audio Waveform Banner -->
           <div class="flex flex-col items-center gap-2">
-            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Type this word:</span>
-            <div id="letterBoxesContainer" class="flex items-center justify-center gap-1.5 flex-wrap min-h-[52px]">
-              <!-- Dynamic letter tiles generated here -->
+            <div class="flex items-center gap-1.5 h-7">
+              <span class="waveform-bar"></span>
+              <span class="waveform-bar"></span>
+              <span class="waveform-bar"></span>
+              <span class="waveform-bar"></span>
+              <span class="waveform-bar"></span>
+              <span class="waveform-bar"></span>
             </div>
+            <h4 class="text-sm md:text-base font-bold text-slate-200 tracking-wide">
+              Listen and write what you hear
+            </h4>
+            <span id="dictationHintText" class="text-xs text-amber-400 font-mono-code font-bold">Word 1 of 5</span>
           </div>
 
-          <!-- Real-Time Typing Input Field -->
-          <div class="relative w-full">
-            <input 
-              id="gameInput" 
-              type="text" 
-              autocomplete="off" 
-              autocapitalize="off" 
-              spellcheck="false"
-              placeholder="Start typing here..." 
-              class="w-full bg-slate-950 border-2 border-indigo-500/50 focus:border-indigo-400 rounded-2xl px-5 py-4 text-center font-mono-code text-xl md:text-2xl font-bold text-white outline-none shadow-lg focus:shadow-indigo-500/25 transition tracking-wider"
-            />
-            <div id="inputKeyHint" class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono-code text-slate-500 pointer-events-none">
-              ENTER ↵
-            </div>
+          <!-- Word Blank Slots -->
+          <div id="dictationSlotsContainer" class="flex flex-wrap items-center justify-center gap-2 my-2">
+            <!-- Dictation slots generated by app.js -->
           </div>
 
-          <!-- Feedback message -->
-          <div id="feedbackMessage" class="text-center font-extrabold text-xs h-4 transition-all"></div>
-
-          <!-- Stage Progress Indicators -->
-          <div class="flex items-center justify-center gap-2 pt-2 border-t border-slate-800/80">
-            <div id="stageDots" class="flex items-center gap-1.5">
-              <!-- Progress dots -->
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- 4. LEVEL COMPLETE CELEBRATION SCREEN -->
-    <section id="doneScreen" class="hidden py-10 animate-fade text-center max-w-xl mx-auto">
-      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 md:p-10 shadow-2xl relative overflow-hidden">
-        <div class="text-6xl mb-4">🏆</div>
-        <h2 class="text-3xl font-black text-white tracking-tight mb-2">Stage Cleared!</h2>
-        <p id="doneSubText" class="text-slate-400 text-sm mb-6">Fantastic rhythm and typing accuracy!</p>
-
-        <!-- Star Rating -->
-        <div id="doneStars" class="flex justify-center gap-3 text-4xl mb-6">
-          <span>⭐</span><span>⭐</span><span>⭐</span>
-        </div>
-
-        <!-- Summary Stats Grid -->
-        <div class="grid grid-cols-3 gap-3 bg-slate-950/70 border border-slate-800/80 rounded-2xl p-4 mb-8">
-          <div>
-            <span class="text-xs text-slate-400 block font-semibold mb-1">Score</span>
-            <span id="doneScore" class="text-lg md:text-xl font-black text-amber-400">0</span>
-          </div>
-          <div>
-            <span class="text-xs text-slate-400 block font-semibold mb-1">Accuracy</span>
-            <span id="doneAccuracy" class="text-lg md:text-xl font-black text-emerald-400">100%</span>
-          </div>
-          <div>
-            <span class="text-xs text-slate-400 block font-semibold mb-1">Max Streak</span>
-            <span id="doneStreak" class="text-lg md:text-xl font-black text-rose-400">0</span>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex items-center justify-center gap-4">
-          <button onclick="replayCurrentLevel()" class="px-6 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-700 transition">
-            Replay Level
-          </button>
-          <button id="nextStageBtn" onclick="goToNextLevel()" class="px-7 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 text-white font-extrabold text-sm shadow-lg shadow-indigo-500/25 transition">
-            Next Stage →
-          </button>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- YouTube IFrame API Script -->
-  <script src="https://www.youtube.com/iframe_api"></script>
-
-  <script>
-    /* =========================================================================
-       AUDIO SYNTHESIZER (WEB AUDIO API - ZERO EXTERNAL ASSET DEPENDENCY)
-       ========================================================================= */
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    let audioCtx = null;
-    let soundEnabled = true;
-
-    function getAudioCtx() {
-      if (!audioCtx) audioCtx = new AudioContext();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      return audioCtx;
-    }
-
-    function toggleAudio() {
-      soundEnabled = !soundEnabled;
-      document.getElementById('soundToggleBtn').textContent = soundEnabled ? '🔊' : '🔇';
-    }
-
-    function playTone(freq, duration, type = 'sine', gainVal = 0.15) {
-      if (!soundEnabled) return;
-      try {
-        const ctx = getAudioCtx();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        gain.gain.setValueAtTime(gainVal, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + duration);
-      } catch (e) {}
-    }
-
-    function playKeyTick() { playTone(520, 0.04, 'triangle', 0.08); }
-    function playWordCorrectSound() {
-      playTone(587.33, 0.1, 'sine', 0.15); // D5
-      setTimeout(() => playTone(880, 0.2, 'triangle', 0.2), 80); // A5
-    }
-    function playWrongSound() {
-      playTone(180, 0.15, 'sawtooth', 0.1);
-    }
-    function playFanfare() {
-      const notes = [523.25, 659.25, 783.99, 1046.50];
-      notes.forEach((freq, idx) => {
-        setTimeout(() => playTone(freq, 0.25, 'triangle', 0.2), idx * 120);
-      });
-    }
-
-    /* Web Speech Synthesis for Word Pronunciation */
-    function speakText(text) {
-      if (!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'en-US';
-      u.rate = 0.85;
-      window.speechSynthesis.speak(u);
-    }
-
-    /* =========================================================================
-       DATA CATALOG: KIDS & YOUTH TRACKS WITH REAL YOUTUBE VIDEOS & TIMED PHRASES
-       ========================================================================= */
-    const TRACKS = {
-      kids: {
-        name: "Kids (8–15)",
-        badge: "Kids Arcade Track",
-        color: "amber",
-        levels: [
-          {
-            id: "kids-1",
-            title: "Level 1: Frozen - Let It Go",
-            sub: "Disney Animated Hit • Easy Vocab",
-            videoId: "L0MK7qz13bU",
-            difficulty: "Beginner",
-            words: [
-              { target: "snow", time: 14.19, before: "The", after: "glows white on the mountain tonight", sentence: "The snow glows white on the mountain tonight." },
-              { target: "queen", time: 25.78, before: "A kingdom of isolation and it looks like I'm the", after: "", sentence: "A kingdom of isolation and it looks like I'm the queen." },
-              { target: "wind", time: 28.38, before: "The", after: "is howling like this swirling storm inside", sentence: "The wind is howling like this swirling storm inside." },
-              { target: "tried", time: 37.20, before: "Couldn't keep it in, heaven knows I", after: "", sentence: "Couldn't keep it in, heaven knows I tried." },
-              { target: "free", time: 116.67, before: "No right, no wrong, no rules for me, I'm", after: "", sentence: "No right, no wrong, no rules for me, I'm free." }
-            ]
-          },
-          {
-            id: "kids-2",
-            title: "Level 2: The Super Mario Bros. Movie Trailer",
-            sub: "Nintendo & Illumination • Action Trailer",
-            videoId: "TnGl01FkMMo",
-            difficulty: "Intermediate",
-            words: [
-              { target: "mushroom", time: 28, before: "Welcome to the", after: "Kingdom!", sentence: "Welcome to the Mushroom Kingdom!" },
-              { target: "princess", time: 42, before: "We have to go save the", after: "from Bowser.", sentence: "We have to go save the princess from Bowser." },
-              { target: "adventure", time: 55, before: "This is going to be the biggest", after: "of our lives.", sentence: "This is going to be the biggest adventure of our lives." },
-              { target: "together", time: 70, before: "If we stick", after: ", nothing can stop us!", sentence: "If we stick together, nothing can stop us!" }
-            ]
-          },
-          {
-            id: "kids-3",
-            title: "Level 3: Moana - How Far I'll Go",
-            sub: "Disney Musical • Rhythmic Typing",
-            videoId: "cPAbx5kgCJo",
-            difficulty: "Advanced",
-            words: [
-              { target: "water", time: 14, before: "I've been staring at the edge of the", after: "", sentence: "I've been staring at the edge of the water." },
-              { target: "daughter", time: 22, before: "I wish I could be the perfect", after: "", sentence: "I wish I could be the perfect daughter." },
-              { target: "horizon", time: 46, before: "See the line where the sky meets the sea, it calls me, and beyond the", after: "", sentence: "Beyond the horizon it calls me." },
-              { target: "journey", time: 75, before: "Every turn I take, every trail I track leads back to the", after: "", sentence: "Every step is part of the journey." }
-            ]
-          }
-        ]
-      },
-      youth: {
-        name: "Youth (16+)",
-        badge: "Youth Beats & Blockbusters",
-        color: "indigo",
-        levels: [
-          {
-            id: "youth-1",
-            title: "Level 1: Shawn Mendes - Treat You Better",
-            sub: "Global Pop Hit (Reference Video Track)",
-            videoId: "lY2yjAdbvdQ",
-            difficulty: "Intermediate",
-            words: [
-              { target: "gentleman", time: 39.64, before: "And any girl like you deserves a", after: "", sentence: "And any girl like you deserves a gentleman." },
-              { target: "better", time: 51.41, before: "I know I can treat you", after: ", better than he can", sentence: "I know I can treat you better, better than he can." },
-              { target: "promise", time: 121.61, before: "Give me a sign, take my hand, we'll be fine. I", after: "I won't let you down", sentence: "Give me a sign, take my hand, we'll be fine. Promise I won't let you down." },
-              { target: "alone", time: 126.89, before: "Just know that you don't have to do this", after: "", sentence: "Just know that you don't have to do this alone." }
-            ]
-          },
-          {
-            id: "youth-2",
-            title: "Level 2: GTA VI Official Trailer 1",
-            sub: "Record-Breaking Game Trailer • Fast Paced",
-            videoId: "QdBZY2fkU-0",
-            difficulty: "Fast Speed",
-            words: [
-              { target: "trust", time: 20, before: "The only way we're gonna get through this is by sticking together, being a team, you", after: "me?", sentence: "You trust me?" },
-              { target: "partner", time: 40, before: "I need someone I can rely on as my", after: "in Vice City.", sentence: "I need someone I can rely on as my partner in Vice City." },
-              { target: "freedom", time: 65, before: "Out on the open highway, that is what real", after: "feels like.", sentence: "Out on the open highway, that is what real freedom feels like." },
-              { target: "legendary", time: 80, before: "We are going to make our names", after: "across the entire state.", sentence: "We are going to make our names legendary across the entire state." }
-            ]
-          },
-          {
-            id: "youth-3",
-            title: "Level 3: Imagine Dragons - Believer",
-            sub: "High-Energy Anthem • Master Rhythm",
-            videoId: "7wtfhZwyrcc",
-            difficulty: "Master WPM",
-            words: [
-              { target: "believer", time: 35, before: "Pain! You made me a, you made me a", after: "", sentence: "You made me a believer!" },
-              { target: "fire", time: 55, before: "Building my rain from up in the clouds, falling like ashes to the ground, hope my feelings, they would drown, but they never did, ever lived, ebbing and flowing, inhibited, limited, till it broke up and it rained down, it rained down like", after: "", sentence: "It rained down like fire." },
-              { target: "future", time: 80, before: "I was broken from a young age, taking my sulking to the masses, write down my poems for the few that looked at me, took to me, shook to me, feeling me, singing from heartache from the pain, taking my message from the veins, speaking my lesson from the brain, seeing the beauty through the", after: "!", sentence: "Seeing the beauty through the future!" }
-            ]
-          }
-        ]
-      }
-    };
-
-    /* =========================================================================
-       GAME STATE MANAGEMENT
-       ========================================================================= */
-    let currentTrackKey = 'kids';
-    let currentLevelIndex = 0;
-    let currentWordIndex = 0;
-    let unlockedLevels = { kids: 1, youth: 1 };
-    let totalStars = 0;
-    let globalStreak = 0;
-    let currentStreak = 0;
-    let maxStreak = 0;
-    let levelScore = 0;
-    let correctKeystrokes = 0;
-    let totalKeystrokes = 0;
-    let startTime = null;
-    let smartPauseActive = true;
-    let player = null;
-    let isPlayerReady = false;
-    let timeCheckInterval = null;
-    let currentTyped = "";
-    let cueStarted = false;
-    let pausedForTyping = false;
-    let syncOffsetSeconds = 0;
-
-    function getCurrentLevel() {
-      return TRACKS[currentTrackKey].levels[currentLevelIndex];
-    }
-
-    function getCurrentCueTime() {
-      const word = getCurrentLevel()?.words[currentWordIndex];
-      return word ? Math.max(0, Number(word.time || 0) + syncOffsetSeconds) : 0;
-    }
-
-    function syncOffsetStorageKey() {
-      return `typebeat-sync-offset-${getCurrentLevel().id}`;
-    }
-
-    function loadSyncOffset() {
-      const stored = Number(localStorage.getItem(syncOffsetStorageKey()));
-      syncOffsetSeconds = Number.isFinite(stored) ? Math.max(-10, Math.min(10, stored)) : 0;
-      updateSyncOffsetLabel();
-    }
-
-    function updateSyncOffsetLabel() {
-      const label = document.getElementById('syncOffsetLabel');
-      if (label) label.textContent = `${syncOffsetSeconds >= 0 ? '+' : ''}${syncOffsetSeconds.toFixed(2)}s`;
-    }
-
-    function adjustSyncOffset(delta) {
-      syncOffsetSeconds = Math.max(-10, Math.min(10, Math.round((syncOffsetSeconds + delta) * 100) / 100));
-      localStorage.setItem(syncOffsetStorageKey(), String(syncOffsetSeconds));
-      updateSyncOffsetLabel();
-      if (player && player.getCurrentTime) checkVideoSync();
-    }
-
-    function resetSyncOffset() {
-      syncOffsetSeconds = 0;
-      localStorage.removeItem(syncOffsetStorageKey());
-      updateSyncOffsetLabel();
-      if (player && player.getCurrentTime) checkVideoSync();
-    }
-
-    function setCueReady(ready) {
-      cueStarted = ready;
-      const input = document.getElementById('gameInput');
-      if (!input) return;
-      input.disabled = !ready;
-      input.placeholder = ready ? 'Start typing here...' : 'Waiting for the lyric cue…';
-      input.classList.toggle('opacity-50', !ready);
-      if (!ready) {
-        document.getElementById('feedbackMessage').textContent = 'Get ready… the next lyric cue is coming up.';
-      } else if (document.getElementById('feedbackMessage').textContent.startsWith('Get ready')) {
-        document.getElementById('feedbackMessage').textContent = '';
-      }
-    }
-
-    /* Initialize Youtube Player API */
-    function onYouTubeIframeAPIReady() {
-      player = new YT.Player('ytPlayerContainer', {
-        height: '100%',
-        width: '100%',
-        videoId: 'L0MK7qz13bU',
-        playerVars: {
-          'playsinline': 1,
-          'controls': 1,
-          'rel': 0,
-          'modestbranding': 1,
-          'disablekb': 1
-        },
-        events: {
-          'onReady': onPlayerReady,
-          'onStateChange': onPlayerStateChange
-        }
-      });
-    }
-
-    function onPlayerReady(event) {
-      isPlayerReady = true;
-    }
-
-    function onPlayerStateChange(event) {
-      // If video starts playing, initiate time tracker
-      if (event.data === YT.PlayerState.PLAYING) {
-        startTimeTracker();
-      } else {
-        stopTimeTracker();
-      }
-    }
-
-    function startTimeTracker() {
-      if (timeCheckInterval) clearInterval(timeCheckInterval);
-      timeCheckInterval = setInterval(checkVideoSync, 200);
-    }
-
-    function stopTimeTracker() {
-      if (timeCheckInterval) {
-        clearInterval(timeCheckInterval);
-        timeCheckInterval = null;
-      }
-    }
-
-    /* Screen Navigation */
-    function showScreen(screenId) {
-      ['modeSelectScreen', 'levelSelectScreen', 'gameScreen', 'doneScreen'].forEach(id => {
-        document.getElementById(id).classList.add('hidden');
-      });
-      document.getElementById(screenId).classList.remove('hidden');
-
-      if (screenId !== 'gameScreen' && isPlayerReady && player && player.pauseVideo) {
-        player.pauseVideo();
-        stopTimeTracker();
-      }
-    }
-
-    function selectAgeTrack(trackKey) {
-      currentTrackKey = trackKey;
-      renderLevelSelection();
-      showScreen('levelSelectScreen');
-    }
-
-    /* Render Level Select Cards */
-    function renderLevelSelection() {
-      loadSavedCustomLevels();
-      const track = TRACKS[currentTrackKey];
-      document.getElementById('trackBadge').textContent = track.badge;
-      const listContainer = document.getElementById('levelList');
-      const unlockedCount = unlockedLevels[currentTrackKey] || 1;
-
-      listContainer.innerHTML = track.levels.map((lvl, index) => {
-        const isUnlocked = index < unlockedCount || (lvl.id && lvl.id.startsWith('custom-')) || lvl.difficulty === 'Custom';
-        return `
-          <div class="relative rounded-3xl p-6 border-2 transition-all duration-200 flex flex-col justify-between ${
-            isUnlocked 
-              ? 'bg-slate-900/90 border-slate-700/80 hover:border-indigo-500 hover:scale-[1.02] shadow-xl cursor-pointer' 
-              : 'bg-slate-950/60 border-slate-800/60 opacity-60 cursor-not-allowed'
-          }" onclick="${isUnlocked ? `startLevel(${index})` : ''}">
-            <div>
-              <div class="flex items-center justify-between mb-4">
-                <span class="text-xs uppercase font-extrabold px-3 py-1 rounded-full ${
-                  isUnlocked ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'bg-slate-800 text-slate-500'
-                }">
-                  ${lvl.difficulty}
-                </span>
-                <span class="text-lg">${isUnlocked ? '⭐ ⭐ ⭐' : '🔒'}</span>
-              </div>
-              <h3 class="text-lg font-black text-white mb-1">${lvl.title}</h3>
-              <p class="text-xs text-slate-400 mb-4">${lvl.sub}</p>
-            </div>
-            
-            <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs">
-              <span class="text-slate-400 font-semibold">${lvl.words.length} Target Words</span>
-              <button class="font-extrabold px-4 py-2 rounded-xl transition ${
-                isUnlocked 
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white' 
-                  : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-              }">
-                ${isUnlocked ? 'Play Stage' : 'Locked'}
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    /* Start / Load Game Level */
-    function startLevel(levelIdx) {
-      currentLevelIndex = levelIdx;
-      currentWordIndex = 0;
-      currentStreak = 0;
-      maxStreak = 0;
-      levelScore = 0;
-      correctKeystrokes = 0;
-      totalKeystrokes = 0;
-      startTime = Date.now();
-      currentTyped = "";
-
-      const lvl = TRACKS[currentTrackKey].levels[currentLevelIndex];
-      loadSyncOffset();
-      cueStarted = false;
-      pausedForTyping = false;
-      document.getElementById('gameLevelTitle').textContent = lvl.title;
-      document.getElementById('gameDifficultyLabel').textContent = `${lvl.difficulty} • Smart Pause: ${smartPauseActive ? 'On' : 'Off'}`;
-      
-      updateLiveStats();
-      showScreen('gameScreen');
-
-      // Load and start at a short lead-in before the first lyric cue.
-      if (isPlayerReady && player) {
-        const firstTime = Math.max(0, Number(lvl.words[0]?.time || 0) + syncOffsetSeconds - 1.5);
-        player.loadVideoById({ videoId: lvl.videoId, startSeconds: firstTime, suggestedQuality: 'large' });
-      }
-
-      renderCurrentWordUI();
-      setCueReady(false);
-      document.getElementById('gameInput').value = "";
-      document.getElementById('gameInput').focus();
-    }
-
-    /* Video Sync Checking */
-    function checkVideoSync() {
-      if (!isPlayerReady || !player || !player.getCurrentTime) return;
-      const curTime = player.getCurrentTime();
-      const lvl = getCurrentLevel();
-      const w = lvl.words[currentWordIndex];
-      if (!w) return;
-
-      const cueTime = getCurrentCueTime();
-      if (!cueStarted && curTime >= cueTime) {
-        setCueReady(true);
-        document.getElementById('gameInput').focus();
-      }
-
-      // Give the player a few seconds to type after the lyric begins, then pause
-      // only that cue. Never jump ahead to a later cue after a correct answer.
-      if (cueStarted && smartPauseActive && !pausedForTyping && curTime >= cueTime + 5) {
-        pausedForTyping = true;
-        player.pauseVideo();
-        document.getElementById('waitingOverlay').classList.remove('hidden');
-      }
-    }
-
-    function toggleSmartPause() {
-      smartPauseActive = document.getElementById('smartPauseCheckbox').checked;
-      document.getElementById('gameDifficultyLabel').textContent = `${TRACKS[currentTrackKey].levels[currentLevelIndex].difficulty} • Smart Pause: ${smartPauseActive ? 'On' : 'Off'}`;
-    }
-
-    /* Render Current Word and Subtitles */
-    function renderCurrentWordUI() {
-      const lvl = TRACKS[currentTrackKey].levels[currentLevelIndex];
-      const w = lvl.words[currentWordIndex];
-
-      if (!w) return;
-
-      currentTyped = "";
-      document.getElementById('phraseCounter').textContent = `Word ${currentWordIndex + 1} of ${lvl.words.length}`;
-      
-      // Update sentences preview
-      const prevWord = lvl.words[currentWordIndex - 1];
-      const nextWord = lvl.words[currentWordIndex + 1];
-      document.getElementById('prevLyricText').textContent = prevWord ? `← ${prevWord.sentence}` : "";
-      document.getElementById('nextLyricText').textContent = nextWord ? `Next: ${nextWord.sentence}` : "";
-
-      // Active lyric sentence with highlighted missing word
-      const sentenceHtml = `
-        <span>${w.before || ''}</span>
-        <span class="inline-block px-3 py-1 mx-1.5 rounded-xl bg-indigo-500/20 border-2 border-indigo-400 text-amber-300 font-extrabold tracking-widest font-mono-code underline decoration-amber-400 decoration-2">
-          ${w.target.replace(/[a-zA-Z]/g, '_ ')}
-        </span>
-        <span>${w.after || ''}</span>
-      `;
-      document.getElementById('activeLyricSentence').innerHTML = sentenceHtml;
-
-      // Generate letter fill-in boxes (like reference video)
-      renderLetterBoxes();
-
-      // Progress dots
-      renderStageDots();
-
-      // Clear input and focus
-      const inp = document.getElementById('gameInput');
-      inp.value = "";
-      inp.focus();
-      document.getElementById('feedbackMessage').textContent = "";
-      const now = isPlayerReady && player && player.getCurrentTime ? player.getCurrentTime() : -1;
-      setCueReady(now >= getCurrentCueTime());
-    }
-
-    function renderLetterBoxes() {
-      const w = TRACKS[currentTrackKey].levels[currentLevelIndex].words[currentWordIndex];
-      const container = document.getElementById('letterBoxesContainer');
-      container.innerHTML = "";
-
-      const target = w.target.toUpperCase();
-      for (let i = 0; i < target.length; i++) {
-        const char = target[i];
-        const isFilled = i < currentTyped.length;
-        const box = document.createElement('div');
-        box.className = `w-10 h-12 md:w-12 md:h-14 rounded-2xl flex items-center justify-center font-mono-code text-xl md:text-2xl font-black uppercase letter-tile border-2 ${
-          isFilled 
-            ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-500/30' 
-            : i === currentTyped.length 
-              ? 'bg-slate-900 border-indigo-400/80 text-slate-500 active' 
-              : 'bg-slate-950 border-slate-800 text-slate-700'
-        }`;
-        box.textContent = isFilled ? currentTyped[i].toUpperCase() : '_';
-        container.appendChild(box);
-      }
-    }
-
-    function renderStageDots() {
-      const lvl = TRACKS[currentTrackKey].levels[currentLevelIndex];
-      const container = document.getElementById('stageDots');
-      container.innerHTML = lvl.words.map((_, i) => `
-        <span class="w-3 h-3 rounded-full transition-all ${
-          i < currentWordIndex 
-            ? 'bg-emerald-400 ring-2 ring-emerald-400/30' 
-            : i === currentWordIndex 
-              ? 'bg-indigo-500 scale-125 ring-2 ring-indigo-400' 
-              : 'bg-slate-800'
-        }"></span>
-      `).join('');
-    }
-
-    /* Key Input Validation */
-    document.getElementById('gameInput').addEventListener('input', (e) => {
-      const val = e.target.value.trim().toLowerCase();
-      const lvl = TRACKS[currentTrackKey].levels[currentLevelIndex];
-      const w = lvl.words[currentWordIndex];
-      const target = w.target.toLowerCase();
-
-      totalKeystrokes++;
-
-      // Check current typed prefix
-      if (target.startsWith(val)) {
-        currentTyped = val;
-        correctKeystrokes++;
-        playKeyTick();
-        renderLetterBoxes();
-
-        // Exact Match Completed!
-        if (val === target) {
-          handleWordSuccess();
-        }
-      } else {
-        // Typing error
-        playWrongSound();
-        triggerErrorEffect();
-      }
-
-      updateLiveStats();
-    });
-
-    document.getElementById('gameInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        skipWord();
-      }
-    });
-
-    function triggerErrorEffect() {
-      const inp = document.getElementById('gameInput');
-      inp.classList.add('border-rose-500');
-      document.getElementById('feedbackMessage').className = "text-center font-extrabold text-xs text-rose-400 h-4";
-      document.getElementById('feedbackMessage').textContent = "Incorrect key! Keep trying.";
-      
-      const boxes = document.querySelectorAll('.letter-tile');
-      boxes.forEach(b => b.classList.add('shake'));
-      setTimeout(() => {
-        inp.classList.remove('border-rose-500');
-        boxes.forEach(b => b.classList.remove('shake'));
-      }, 350);
-    }
-
-    function handleWordSuccess() {
-      playWordCorrectSound();
-      currentStreak++;
-      if (currentStreak > maxStreak) maxStreak = currentStreak;
-      globalStreak++;
-      document.getElementById('globalStreak').textContent = globalStreak;
-
-      // Score formula
-      const wordPoints = 100 + (currentStreak * 10);
-      levelScore += wordPoints;
-
-      // Show feedback
-      document.getElementById('feedbackMessage').className = "text-center font-extrabold text-xs text-emerald-400 h-4";
-      document.getElementById('feedbackMessage').textContent = `Awesome! +${wordPoints} pts`;
-
-      // Streak combo badge
-      if (currentStreak >= 2) {
-        document.getElementById('comboBadge').classList.remove('hidden');
-        document.getElementById('comboCount').textContent = currentStreak;
-      }
-
-      // Resume only if smart pause stopped playback. Keep the media clock running
-      // naturally so each following cue stays aligned with the original video.
-      document.getElementById('waitingOverlay').classList.add('hidden');
-      pausedForTyping = false;
-      if (isPlayerReady && player) player.playVideo();
-
-      setTimeout(() => {
-        currentWordIndex++;
-        const lvl = getCurrentLevel();
-        if (currentWordIndex >= lvl.words.length) {
-          finishLevel();
-        } else {
-          renderCurrentWordUI();
-          checkVideoSync();
-        }
-      }, 450);
-    }
-
-    function skipWord() {
-      const lvl = TRACKS[currentTrackKey].levels[currentLevelIndex];
-      currentStreak = 0;
-      document.getElementById('comboBadge').classList.add('hidden');
-      document.getElementById('waitingOverlay').classList.add('hidden');
-      pausedForTyping = false;
-      if (isPlayerReady && player) player.playVideo();
-
-      currentWordIndex++;
-      if (currentWordIndex >= lvl.words.length) {
-        finishLevel();
-      } else {
-        renderCurrentWordUI();
-        checkVideoSync();
-      }
-    }
-
-    function replayCurrentPhrase() {
-      const lvl = getCurrentLevel();
-      const w = lvl.words[currentWordIndex];
-      if (isPlayerReady && player && w) {
-        pausedForTyping = false;
-        document.getElementById('waitingOverlay').classList.add('hidden');
-        setCueReady(false);
-        player.seekTo(Math.max(0, getCurrentCueTime() - 1.5), true);
-        player.playVideo();
-      }
-    }
-
-    function speakCurrentWord() {
-      const lvl = TRACKS[currentTrackKey].levels[currentLevelIndex];
-      const w = lvl.words[currentWordIndex];
-      if (w) speakText(w.target);
-    }
-
-    function updateLiveStats() {
-      // Accuracy
-      const acc = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
-      document.getElementById('liveAccuracy').textContent = `${acc}%`;
-
-      // WPM
-      const minutes = (Date.now() - (startTime || Date.now())) / 60000;
-      const wpm = minutes > 0 ? Math.round((correctKeystrokes / 5) / minutes) : 0;
-      document.getElementById('liveWpm').textContent = `${Math.min(wpm, 150)} WPM`;
-
-      // Score
-      document.getElementById('liveScore').textContent = levelScore;
-    }
-
-    /* Level Complete */
-    function finishLevel() {
-      pausedForTyping = false;
-      stopTimeTracker();
-      if (isPlayerReady && player) player.pauseVideo();
-
-      playFanfare();
-      confetti({
-        particleCount: 120,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-
-      // Unlock next level
-      const currentUnlocked = unlockedLevels[currentTrackKey] || 1;
-      if (currentLevelIndex + 1 >= currentUnlocked) {
-        unlockedLevels[currentTrackKey] = currentLevelIndex + 2;
-      }
-
-      totalStars += 3;
-      document.getElementById('globalStars').textContent = totalStars;
-
-      // Fill done screen
-      document.getElementById('doneScore').textContent = levelScore;
-      const acc = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
-      document.getElementById('doneAccuracy').textContent = `${acc}%`;
-      document.getElementById('doneStreak').textContent = maxStreak;
-
-      const track = TRACKS[currentTrackKey];
-      const hasNext = currentLevelIndex + 1 < track.levels.length;
-      document.getElementById('nextStageBtn').classList.toggle('hidden', !hasNext);
-
-      showScreen('doneScreen');
-    }
-
-    function replayCurrentLevel() {
-      startLevel(currentLevelIndex);
-    }
-
-    function goToNextLevel() {
-      const track = TRACKS[currentTrackKey];
-      if (currentLevelIndex + 1 < track.levels.length) {
-        startLevel(currentLevelIndex + 1);
-      } else {
-        showScreen('levelSelectScreen');
-      }
-    }
-
-    function exitGameToLevels() {
-      stopTimeTracker();
-      if (isPlayerReady && player) player.pauseVideo();
-      renderLevelSelection();
-      showScreen('levelSelectScreen');
-    }
-
-    /* =========================================================================
-       CUSTOM VIDEO & AUTOMATIC TRANSCRIPT SYNC ENGINE
-       ========================================================================= */
-    const STOP_WORDS = new Set([
-      'a','an','the','and','or','but','if','in','on','at','to','for','with','of','by',
-      'from','up','about','into','over','after','is','am','are','was','were','be','been',
-      'being','have','has','had','do','does','did','i','you','he','she','it','we','they',
-      'me','him','her','us','them','my','your','his','its','our','their','this','that',
-      'these','those','so','no','not','what','who','how','why','when','where','all','will','would'
-    ]);
-
-    function extractYouTubeVideoId(input) {
-      if (!input) return null;
-      input = input.trim();
-      const match = input.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|shorts\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
-      if (match) return match[1];
-      if (/^[\w-]{11}$/.test(input)) return input;
-      return null;
-    }
-
-    async function fetchWithTimeout(url, options = {}, timeoutMs = 6000) {
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), timeoutMs);
-      try {
-        const response = await fetch(url, { ...options, signal: controller.signal });
-        clearTimeout(id);
-        return response;
-      } catch (err) {
-        clearTimeout(id);
-        throw err;
-      }
-    }
-
-    async function fetchYouTubeCaptions(videoId) {
-      // Endpoint 1: youtubetextconverter.com (Open CORS, returns segments with start & duration)
-      try {
-        const res = await fetchWithTimeout(`https://youtubetextconverter.com/api/public/v1/transcript?url=${videoId}`, {}, 6000);
-        if (res.ok) {
-          const data = await res.json();
-          const rawSegs = data.segments || data.transcript || [];
-          if (rawSegs.length > 0) {
-            return {
-              title: data.title || "Custom YouTube Video",
-              segments: rawSegs.map(s => ({
-                start: typeof s.start === 'number' ? s.start : parseFloat(s.start) || 0,
-                text: s.text || ""
-              }))
-            };
-          }
-        }
-      } catch (e) {
-        console.warn("Transcript service 1 failed, trying fallback...", e);
-      }
-
-      // Endpoint 2: youtubegpt.ai (Open CORS)
-      try {
-        const res = await fetchWithTimeout(`https://youtubegpt.ai/api/transcript?v=${videoId}`, {}, 6000);
-        if (res.ok) {
-          const data = await res.json();
-          const rawSegs = data.segments || data.transcript || [];
-          if (rawSegs.length > 0) {
-            return {
-              title: data.title || "Custom YouTube Video",
-              segments: rawSegs.map(s => {
-                let start = typeof s.start === 'number' ? s.start : parseFloat(s.start) || 0;
-                if (start > 1000) start = start / 1000; // convert milliseconds if provided
-                return { start, text: s.text || "" };
-              })
-            };
-          }
-        }
-      } catch (e) {
-        console.warn("Transcript service 2 failed, trying fallback...", e);
-      }
-
-      // Endpoint 3: transcribeyoutube.com
-      try {
-        const res = await fetchWithTimeout(`https://transcribeyoutube.com/api/transcript`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${videoId}` })
-        }, 6000);
-        if (res.ok) {
-          const data = await res.json();
-          const rawSegs = data.transcript || [];
-          if (rawSegs.length > 0) {
-            return {
-              title: data.title || "Custom YouTube Video",
-              segments: rawSegs.map(s => ({
-                start: typeof s.start === 'number' ? s.start : parseFloat(s.start) || 0,
-                text: s.text || ""
-              }))
-            };
-          }
-        }
-      } catch (e) {
-        console.warn("Transcript service 3 failed.", e);
-      }
-
-      return null;
-    }
-
-    function parseSegmentsToGameWords(segments) {
-      const words = [];
-      let lastTime = -10;
-
-      for (const seg of segments) {
-        let text = (seg.text || '')
-          .replace(/[♪♫#]/g, '')
-          .replace(/\s+/g, ' ')
-          .trim();
-
-        // Skip sound effect cues like [Music], (Applause), [Singing]
-        if (!text || (text.startsWith('[') && text.endsWith(']')) || (text.startsWith('(') && text.endsWith(')'))) {
-          continue;
-        }
-
-        let time = typeof seg.start === 'number' ? seg.start : parseFloat(seg.start) || 0;
-        if (time > 1000) time = time / 1000;
-        time = Math.round(time * 100) / 100;
-
-        // Space prompts by at least 3.5 seconds so player has time to listen and type
-        if (time - lastTime < 3.5) continue;
-
-        const tokens = text.split(/\s+/).filter(Boolean);
-        if (!tokens.length) continue;
-
-        // Find candidate words: clean letters only, 3+ chars, not a stop word, no internal apostrophe
-        let candidates = [];
-        tokens.forEach((token, idx) => {
-          const clean = token.replace(/[^a-zA-Z]/g, '').toLowerCase();
-          if (clean.length >= 3 && !token.includes("'") && !token.includes("’") && !STOP_WORDS.has(clean)) {
-            candidates.push({ score: clean.length, idx, clean, token });
-          }
-        });
-
-        // Fallback: accept words of 2+ chars if no candidate found
-        if (!candidates.length) {
-          tokens.forEach((token, idx) => {
-            const clean = token.replace(/[^a-zA-Z]/g, '').toLowerCase();
-            if (clean.length >= 2 && !token.includes("'") && !token.includes("’")) {
-              candidates.push({ score: clean.length, idx, clean, token });
-            }
-          });
-        }
-
-        if (!candidates.length) continue;
-
-        // Pick the most distinctive word
-        candidates.sort((a, b) => b.score - a.score);
-        const chosen = candidates[0];
-
-        const before = tokens.slice(0, chosen.idx).join(' ');
-        const after = tokens.slice(chosen.idx + 1).join(' ');
-
-        words.push({
-          target: chosen.clean,
-          time: time,
-          before: before ? before + ' ' : '',
-          after: after ? ' ' + after : '',
-          sentence: text
-        });
-
-        lastTime = time;
-      }
-      return words;
-    }
-
-    function parseLrcOrRawLyrics(rawText) {
-      const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
-      const segments = [];
-      let currentTime = 10;
-
-      for (const line of lines) {
-        // Matches [00:15.20] or [01:23]
-        const lrcMatch = line.match(/^\[(\d+):(\d+(?:\.\d+)?)\](.*)$/);
-        if (lrcMatch) {
-          const mins = parseInt(lrcMatch[1], 10);
-          const secs = parseFloat(lrcMatch[2]);
-          const lineText = lrcMatch[3].trim();
-          if (lineText) {
-            segments.push({ start: Math.round((mins * 60 + secs) * 100) / 100, text: lineText });
-          }
-        } else {
-          // Plain line without timestamp
-          segments.push({ start: currentTime, text: line });
-          currentTime += 6.5; // space by 6.5 seconds
-        }
-      }
-
-      return parseSegmentsToGameWords(segments);
-    }
-
-    function setCustomStatus(type, message) {
-      const area = document.getElementById('customStatusArea');
-      const icon = document.getElementById('customStatusIcon');
-      const text = document.getElementById('customStatusText');
-      if (!message) {
-        area.classList.add('hidden');
-        return;
-      }
-      area.classList.remove('hidden');
-      if (type === 'loading') {
-        area.className = "mt-3.5 px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center gap-2 bg-indigo-950/60 border border-indigo-700/50 text-indigo-200 animate-pulse";
-        icon.textContent = "⏳";
-      } else if (type === 'success') {
-        area.className = "mt-3.5 px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center gap-2 bg-emerald-950/60 border border-emerald-700/50 text-emerald-200";
-        icon.textContent = "✅";
-      } else if (type === 'warning') {
-        area.className = "mt-3.5 px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center gap-2 bg-amber-950/60 border border-amber-700/50 text-amber-200";
-        icon.textContent = "⚠️";
-      } else {
-        area.className = "mt-3.5 px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center gap-2 bg-rose-950/60 border border-rose-700/50 text-rose-200";
-        icon.textContent = "❌";
-      }
-      text.textContent = message;
-    }
-
-    async function loadCustomVideo() {
-      const input = document.getElementById('customYtUrl').value.trim();
-      const videoId = extractYouTubeVideoId(input);
-
-      if (!videoId) {
-        setCustomStatus('error', 'Please enter a valid YouTube video link or 11-character video ID.');
-        return;
-      }
-
-      const btnSpinner = document.getElementById('customBtnSpinner');
-      const btnText = document.getElementById('customBtnText');
-      btnSpinner.classList.remove('hidden');
-      btnText.textContent = "Syncing...";
-      setCustomStatus('loading', 'Contacting YouTube subtitles service to extract exact phrase timings...');
-
-      try {
-        const result = await fetchYouTubeCaptions(videoId);
-        if (result && result.segments && result.segments.length > 0) {
-          const words = parseSegmentsToGameWords(result.segments);
-          if (words.length > 0) {
-            setCustomStatus('success', `Found ${words.length} timed phrases from YouTube! Launching stage...`);
-            setTimeout(() => {
-              applyCustomWordsAndStart(videoId, words, result.title || "Custom YouTube Practice");
-              btnSpinner.classList.add('hidden');
-              btnText.textContent = "Sync & Play";
-            }, 600);
-            return;
-          }
-        }
-
-        // If no captions were found, open the custom lyrics modal to help the user set timings
-        setCustomStatus('warning', 'No public auto-subtitles found on YouTube. Opening Lyrics & Timing tool...');
-        btnSpinner.classList.add('hidden');
-        btnText.textContent = "Sync & Play";
-        openCustomLyricModal(videoId);
-
-      } catch (err) {
-        console.error("Error during custom video auto-sync:", err);
-        setCustomStatus('warning', 'Could not reach YouTube transcript API. Opening Lyrics & Timing tool...');
-        btnSpinner.classList.add('hidden');
-        btnText.textContent = "Sync & Play";
-        openCustomLyricModal(videoId);
-      }
-    }
-
-    function applyCustomWordsAndStart(videoId, words, title) {
-      const customLevel = {
-        id: "custom-" + Date.now(),
-        title: title || "Custom YouTube Practice",
-        sub: `YouTube: ${videoId} • ${words.length} Timed Cues`,
-        videoId: videoId,
-        difficulty: "Custom",
-        words: words
-      };
-
-      TRACKS[currentTrackKey].levels.push(customLevel);
-      saveCustomLevelToStorage(customLevel);
-      renderLevelSelection();
-      startLevel(TRACKS[currentTrackKey].levels.length - 1);
-    }
-
-    function saveCustomLevelToStorage(level) {
-      try {
-        const saved = JSON.parse(localStorage.getItem('typebeat_custom_levels') || '[]');
-        saved.push(level);
-        localStorage.setItem('typebeat_custom_levels', JSON.stringify(saved));
-      } catch (e) {
-        console.warn("Could not save to localStorage", e);
-      }
-    }
-
-    function loadSavedCustomLevels() {
-      try {
-        const saved = JSON.parse(localStorage.getItem('typebeat_custom_levels') || '[]');
-        if (Array.isArray(saved) && saved.length > 0) {
-          saved.forEach(lvl => {
-            if (!TRACKS[currentTrackKey].levels.some(l => l.id === lvl.id)) {
-              TRACKS[currentTrackKey].levels.push(lvl);
-            }
-          });
-        }
-      } catch (e) {
-        console.warn("Could not load custom levels", e);
-      }
-    }
-
-    /* Modal handlers */
-    function openCustomLyricModal(prefillVideoId = "") {
-      const currentInput = document.getElementById('customYtUrl').value.trim();
-      const videoId = prefillVideoId || extractYouTubeVideoId(currentInput) || "";
-      document.getElementById('modalYtUrl').value = videoId ? `https://www.youtube.com/watch?v=${videoId}` : currentInput;
-      document.getElementById('customLyricsModal').classList.remove('hidden');
-    }
-
-    function closeCustomLyricModal() {
-      document.getElementById('customLyricsModal').classList.add('hidden');
-    }
-
-    function autoGenerateBeatTimings() {
-      const sampleVocab = ["rhythm", "melody", "harmony", "energy", "future", "feeling", "champion", "thunder", "sparkle"];
-      const generated = sampleVocab.map((w, idx) => {
-        const time = 12 + idx * 10;
-        return `[00:${time < 10 ? '0' + time : time}.00] Type the ${w} with the music beat`;
-      }).join('\n');
-      document.getElementById('modalLyricsText').value = generated;
-    }
-
-    function applyModalLyricsAndStart() {
-      const urlInput = document.getElementById('modalYtUrl').value.trim();
-      const videoId = extractYouTubeVideoId(urlInput);
-      const text = document.getElementById('modalLyricsText').value.trim();
-
-      if (!videoId) return alert("Please provide a valid YouTube URL or ID.");
-      if (!text) return alert("Please paste lyrics or click 'Auto-Generate Beat Pacing'.");
-
-      const words = parseLrcOrRawLyrics(text);
-      if (!words.length) return alert("Could not parse words from lyrics. Try typing one line per sentence.");
-
-      closeCustomLyricModal();
-      applyCustomWordsAndStart(videoId, words, "Custom Synced Song");
-    }
-
-    /* Live In-Game Timing Calibration */
-    function openLiveTimingModal() {
-      const lvl = getCurrentLevel();
-      const list = document.getElementById('timingWordsList');
-      const curTime = (isPlayerReady && player && player.getCurrentTime) ? Math.round(player.getCurrentTime() * 100) / 100 : 0;
-      document.getElementById('modalCurrentVideoTime').textContent = `${curTime.toFixed(2)}s`;
-
-      list.innerHTML = lvl.words.map((w, i) => `
-        <div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2 text-xs">
-          <div class="flex-1 truncate">
-            <span class="font-extrabold text-amber-300 font-mono-code uppercase mr-1.5">[#${i + 1} ${w.target}]</span>
-            <span class="text-slate-400 truncate text-[11px]">${w.sentence}</span>
-          </div>
-          <div class="flex items-center gap-1.5 shrink-0">
-            <input type="number" step="0.25" value="${w.time}" onchange="updateWordTiming(${i}, this.value)" class="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white font-mono-code text-center">
-            <span class="text-slate-500 text-[10px]">sec</span>
-            <button onclick="captureCurrentVideoTime(${i})" class="bg-indigo-600/80 hover:bg-indigo-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg transition" title="Set this line's time to current playback position">
-              Capture
+          <!-- Hotkeys Helper Bar (like in YouType reference video) -->
+          <div class="flex flex-wrap items-center justify-center gap-3 text-xs text-slate-400 pt-3 border-t border-slate-800/80">
+            <button onclick="replayCurrentLine()" class="hover:text-amber-300 font-semibold flex items-center gap-1 bg-slate-800/70 px-2.5 py-1 rounded-lg border border-slate-700/60">
+              <kbd class="font-mono-code text-[10px] bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 text-slate-200">Ctrl</kbd> Replay line
+            </button>
+            <button onclick="giveDictationHint()" class="hover:text-amber-300 font-semibold flex items-center gap-1 bg-slate-800/70 px-2.5 py-1 rounded-lg border border-slate-700/60">
+              <kbd class="font-mono-code text-[10px] bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 text-slate-200">Ctrl+Shift</kbd> Hint for word
+            </button>
+            <span class="text-slate-500 font-semibold flex items-center gap-1">
+              <kbd class="font-mono-code text-[10px] bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 text-slate-200">Space</kbd> Next word
+            </span>
+            <button onclick="revealDictationAnswer()" class="hover:text-amber-300 font-semibold flex items-center gap-1 bg-slate-800/70 px-2.5 py-1 rounded-lg border border-slate-700/60">
+              <kbd class="font-mono-code text-[10px] bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 text-slate-200">Esc</kbd> Show answer
             </button>
           </div>
         </div>
-      `).join('');
 
-      document.getElementById('liveTimingModal').classList.remove('hidden');
-    }
+      </div>
 
-    function closeLiveTimingModal() {
-      document.getElementById('liveTimingModal').classList.add('hidden');
-    }
+    </section>
 
-    function updateWordTiming(idx, newTime) {
-      const lvl = getCurrentLevel();
-      if (lvl && lvl.words[idx]) {
-        lvl.words[idx].time = Math.max(0, parseFloat(newTime) || 0);
-        saveCustomLevelToStorage(lvl);
-      }
-    }
+    <!-- 4. LEVEL COMPLETE SCREEN -->
+    <section id="doneScreen" class="hidden py-12 text-center max-w-xl mx-auto animate-fade">
+      <div class="w-20 h-20 rounded-3xl bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center text-4xl mx-auto mb-6 shadow-xl shadow-amber-500/10">
+        🏆
+      </div>
+      <h2 class="text-3xl font-black text-white mb-2">Awesome Performance!</h2>
+      <p class="text-slate-400 text-sm mb-8">You successfully synchronized and typed through the track!</p>
 
-    function captureCurrentVideoTime(idx) {
-      if (!isPlayerReady || !player || !player.getCurrentTime) return;
-      const curTime = Math.round(player.getCurrentTime() * 100) / 100;
-      updateWordTiming(idx, curTime);
-      openLiveTimingModal(); // refresh UI
-    }
-  </script>
+      <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4">
+          <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Final Score</span>
+          <span id="finalScore" class="text-xl font-mono-code font-black text-amber-400">0</span>
+        </div>
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4">
+          <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Typing Speed</span>
+          <span id="finalWpm" class="text-xl font-mono-code font-black text-indigo-400">0 WPM</span>
+        </div>
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4">
+          <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Accuracy</span>
+          <span id="finalAccuracy" class="text-xl font-mono-code font-black text-emerald-400">100%</span>
+        </div>
+      </div>
 
-  <!-- CUSTOM SYNC & LYRICS MODAL -->
-  <div id="customLyricsModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div class="flex items-center justify-center gap-4">
+        <button onclick="startLevel(state.currentLevelIndex)" class="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition shadow-lg shadow-amber-500/20">
+          Play Again
+        </button>
+        <button onclick="showScreen('levelSelectScreen')" class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold transition border border-slate-700">
+          Choose Another Song
+        </button>
+      </div>
+    </section>
+
+  
+  <!-- CUSTOM LYRICS & TIMINGS MODAL -->
+  <div id="customLyricsModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl flex flex-col gap-4 animate-fade max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
         <div class="flex items-center gap-2">
@@ -1480,47 +362,22 @@
 [00:30.00] Hey, alright now" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white font-mono-code outline-none focus:border-indigo-500 leading-relaxed"></textarea>
       </div>
 
-      <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+      <div class="flex items-center justify-between pt-2 border-t border-slate-800 flex-wrap gap-2">
         <button onclick="autoGenerateBeatTimings()" class="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1">
           <span>⚡</span> Auto-Generate Beat Pacing
         </button>
         <div class="flex gap-2">
           <button onclick="closeCustomLyricModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white bg-slate-800 transition">Cancel</button>
-          <button onclick="applyModalLyricsAndStart()" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/30 transition">Sync & Start Game</button>
+          <button onclick="applyModalLyricsAndStart()" class="px-5 py-2 rounded-xl text-xs font-black text-white bg-indigo-600 hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/30">Start Playing</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- LIVE TIMING CALIBRATION MODAL -->
-  <div id="liveTimingModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl flex flex-col gap-4 animate-fade max-h-[85vh] overflow-hidden">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-        <div class="flex items-center gap-2">
-          <span class="text-xl">⏱️</span>
-          <div>
-            <h3 class="font-extrabold text-sm text-white">Live Word Timings & Cue Calibration</h3>
-            <p class="text-[11px] text-slate-400">Fine-tune the exact second each lyric phrase appears.</p>
-          </div>
-        </div>
-        <button onclick="closeLiveTimingModal()" class="text-slate-400 hover:text-white text-lg p-1">✕</button>
-      </div>
+  </main>
 
-      <div class="flex items-center justify-between bg-indigo-950/40 border border-indigo-800/40 rounded-xl px-3 py-2 text-xs">
-        <span class="text-slate-300">Current Video Playback Time:</span>
-        <span id="modalCurrentVideoTime" class="font-mono-code font-bold text-amber-300 text-sm">0.00s</span>
-      </div>
-
-      <div id="timingWordsList" class="flex-1 overflow-y-auto space-y-2 pr-1">
-        <!-- Rendered dynamically -->
-      </div>
-
-      <div class="flex items-center justify-between pt-3 border-t border-slate-800">
-        <span class="text-[11px] text-slate-500">Changes save automatically to this song.</span>
-        <button onclick="closeLiveTimingModal()" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition">Done</button>
-      </div>
-    </div>
-  </div>
-
+  <!-- SCRIPTS -->
+  <script src="songs.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
