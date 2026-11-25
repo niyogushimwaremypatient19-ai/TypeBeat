@@ -327,8 +327,11 @@ function onLineCompleted() {
   state.dictationWordsTyped = [];
   renderLineUI();
 
-  // Resume immediately, matching the VocaType flow.
-  if (state.isPlayerReady && state.player) {
+  // Always seek video precisely to the start of the next line so audio matches displayed text
+  const nextLine = getCurrentLevel()?.lines[state.currentLineIndex];
+  if (nextLine && state.isPlayerReady && state.player) {
+    const nextStart = Math.max(0, nextLine.start + state.syncOffset);
+    state.player.seekTo(nextStart, true);
     state.player.playVideo();
   }
 }
@@ -393,14 +396,32 @@ function handleVocaTypeKey(key) {
     state.charIndex++;
     renderVocaTypeUI();
 
+    // If video was paused because of a typo, resume video if before line pause boundary
+    if (state.isPausedForInput && state.isPlayerReady && state.player) {
+      const curTime = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
+      const pauseBoundary = Math.max(0, line.pause + state.syncOffset);
+      if (curTime < pauseBoundary) {
+        state.isPausedForInput = false;
+        showPausePill(false);
+        state.player.playVideo();
+      }
+    }
+
     // Check if entire line completed
     if (state.charIndex >= sentence.length) {
       onLineCompleted();
     }
   } else {
-    // Typing Error: Shake active character
+    // Typing Error: Shake active character & pause video so song doesn't run ahead
     sounds.playWrongSound();
     state.streak = 0;
+
+    if (state.smartPauseEnabled && state.isPlayerReady && state.player) {
+      state.isPausedForInput = true;
+      state.player.pauseVideo();
+      showPausePill(true);
+    }
+
     const activeSpan = document.querySelector(`.lyric-char[data-index="${state.charIndex}"]`);
     if (activeSpan) {
       activeSpan.classList.add('error');
@@ -496,6 +517,11 @@ function handleDictationKey(key) {
     } else if (/[a-z0-9]/i.test(key)) {
       state.streak = 0;
       sounds.playWrongSound();
+      if (state.smartPauseEnabled && state.isPlayerReady && state.player) {
+        state.isPausedForInput = true;
+        state.player.pauseVideo();
+        showPausePill(true);
+      }
     }
     if (/[a-z0-9]/i.test(key)) sounds.playKeyTick();
     state.dictationWordsTyped[state.dictationWordIndex] = currentTyped + key;
