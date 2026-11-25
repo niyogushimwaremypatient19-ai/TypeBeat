@@ -130,6 +130,7 @@ const state = {
   dictationWordIndex: 0, // for Dictation mode
   dictationWordsTyped: [], // typed words array
   isPausedForInput: false,
+  pausedByMistake: false, // true only when a typing error paused the video
   smartPauseEnabled: true,
   showTranslation: true,
   syncOffset: 0, // in seconds
@@ -268,6 +269,7 @@ function startLevel(levelIndex, trackKey = null) {
   state.dictationWordIndex = 0;
   state.dictationWordsTyped = [];
   state.isPausedForInput = false;
+  state.pausedByMistake = false;
   state.correctKeystrokes = 0;
   state.totalKeystrokes = 0;
   state.streak = 0;
@@ -305,6 +307,7 @@ function replayCurrentLine() {
   state.dictationWordIndex = 0;
   state.dictationWordsTyped = [];
   state.isPausedForInput = false;
+  state.pausedByMistake = false;
   showPausePill(false);
 
   const seekTime = Math.max(0, line.start + state.syncOffset);
@@ -335,6 +338,7 @@ function onLineCompleted() {
   state.score += 150 + (state.streak * 15);
   state.streak++;
   state.isPausedForInput = false;
+  state.pausedByMistake = false;
   showPausePill(false);
 
   // Micro flash on subtitle container
@@ -427,7 +431,14 @@ function handleVocaTypeKey(key) {
     state.correctKeystrokes++;
     sounds.playKeyTick();
     state.charIndex++;
-    if (state.isPausedForInput) showPausePill(true, 'Good, keep typing to continue');
+    if (state.pausedByMistake) {
+      state.pausedByMistake = false;
+      state.isPausedForInput = false;
+      showPausePill(false);
+      if (state.isPlayerReady && state.player) state.player.playVideo();
+    } else if (state.isPausedForInput) {
+      showPausePill(true, 'Good, keep typing to continue');
+    }
     renderVocaTypeUI();
 
 
@@ -443,6 +454,7 @@ function handleVocaTypeKey(key) {
 
     if (state.smartPauseEnabled && state.isPlayerReady && state.player) {
       state.isPausedForInput = true;
+      state.pausedByMistake = true;
       state.player.pauseVideo();
       const expected = targetChar === ' ' ? 'space' : targetChar;
       showPausePill(true, `Not quite. Type "${expected}" to continue`);
