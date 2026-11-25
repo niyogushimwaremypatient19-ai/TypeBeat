@@ -85,6 +85,36 @@ class SoundEngine {
   }
 }
 
+const PROGRESS_KEY = 'typebeat_progress_v1';
+
+function loadProgress() {
+  try {
+    return JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveProgress(progress) {
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+  } catch (e) {
+    console.warn('Could not save progress.', e);
+  }
+}
+
+function bestScoreLabel(id) {
+  const best = loadProgress().songs?.[id];
+  return best
+    ? `<p class="text-xs font-bold text-amber-400 mt-2">Best: ${best.score} pts • ${best.accuracy}% accuracy</p>`
+    : '';
+}
+
+function academyBestLabel(id) {
+  const best = loadProgress().academy?.bestStars?.[id];
+  return best ? ` ${'★'.repeat(best)}` : '';
+}
+
 const sounds = new SoundEngine();
 
 /* =========================================================================
@@ -189,11 +219,12 @@ function checkPlaybackSync() {
   }
 }
 
-function showPausePill(show) {
+function showPausePill(show, message = 'Waiting for your typing…') {
   const pill = document.getElementById('waitingOverlay');
-  if (pill) {
-    pill.classList.toggle('hidden', !show);
-  }
+  if (!pill) return;
+  pill.classList.toggle('hidden', !show);
+  const label = pill.querySelector('span:last-child');
+  if (label && show) label.textContent = message;
 }
 
 function updatePlayPauseButton(isPlaying) {
@@ -396,6 +427,7 @@ function handleVocaTypeKey(key) {
     state.correctKeystrokes++;
     sounds.playKeyTick();
     state.charIndex++;
+    if (state.isPausedForInput) showPausePill(true, 'Good, keep typing to continue');
     renderVocaTypeUI();
 
 
@@ -412,7 +444,8 @@ function handleVocaTypeKey(key) {
     if (state.smartPauseEnabled && state.isPlayerReady && state.player) {
       state.isPausedForInput = true;
       state.player.pauseVideo();
-      showPausePill(true);
+      const expected = targetChar === ' ' ? 'space' : targetChar;
+      showPausePill(true, `Not quite. Type "${expected}" to continue`);
     }
 
     const activeSpan = document.querySelector(`.lyric-char[data-index="${state.charIndex}"]`);
@@ -513,7 +546,7 @@ function handleDictationKey(key) {
       if (state.smartPauseEnabled && state.isPlayerReady && state.player) {
         state.isPausedForInput = true;
         state.player.pauseVideo();
-        showPausePill(true);
+        showPausePill(true, 'Wrong letter. Fix it and keep typing');
       }
     }
     if (/[a-z0-9]/i.test(key)) sounds.playKeyTick();
@@ -1144,6 +1177,17 @@ function finishLevel() {
     ? Math.round((state.correctKeystrokes / state.totalKeystrokes) * 100) 
     : 100;
   
+  const finishedLevel = getCurrentLevel();
+  if (finishedLevel) {
+    const prog = loadProgress();
+    prog.songs = prog.songs || {};
+    const prev = prog.songs[finishedLevel.id];
+    if (!prev || state.score > prev.score) {
+      prog.songs[finishedLevel.id] = { score: state.score, accuracy };
+      saveProgress(prog);
+    }
+  }
+
   const finalScoreEl = document.getElementById('finalScore');
   if (finalScoreEl) finalScoreEl.textContent = state.score;
   const finalAccEl = document.getElementById('finalAccuracy');
@@ -1196,6 +1240,7 @@ function renderLevelCards() {
       </div>
       <h3 class="text-lg font-black text-white group-hover:text-amber-400 transition pr-2">${lvl.title}</h3>
       <p class="text-xs text-slate-400 mt-1">${lvl.sub}</p>
+      ${bestScoreLabel(lvl.id)}
     </div>
   `).join('');
 }
@@ -1536,7 +1581,7 @@ function renderAcademyLessonTabs() {
   if (!container) return;
   container.innerHTML = ACADEMY_LESSONS.map((l, idx) => `
     <button onclick="loadAcademyLesson(${idx})" class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${idx === academyState.lessonIndex ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20' : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'}">
-      <span>${l.title}</span>
+      <span>${l.title}${academyBestLabel(l.id)}</span>
     </button>
   `).join('');
 }
@@ -1574,6 +1619,20 @@ function setAcademyBpm(bpm) {
       }
     }
   });
+}
+
+function getAcademyStars() {
+  const e = academyState.errors;
+  return e === 0 ? 3 : e <= 3 ? 2 : 1;
+}
+
+function renderAcademyStars() {
+  academyState.stars = getAcademyStars();
+  const el = document.getElementById('academyStars');
+  if (!el) return;
+  el.innerHTML = [1, 2, 3].map(i =>
+    `<span class="${i <= academyState.stars ? 'text-amber-400' : 'text-slate-700'}">★</span>`
+  ).join('');
 }
 
 function renderAcademyUI() {
@@ -1628,6 +1687,7 @@ function renderAcademyUI() {
 
   // 4. Keyboard rendering
   renderAcademyKeyboard(currentChar.toLowerCase());
+  renderAcademyStars();
 }
 
 function renderAcademyKeyboard(activeChar) {
@@ -1742,6 +1802,15 @@ function handleAcademyKey(e) {
 
 function finishAcademyLesson() {
   renderAcademyUI();
+
+  const lessonId = ACADEMY_LESSONS[academyState.lessonIndex].id;
+  const prog = loadProgress();
+  prog.academy = prog.academy || { bestStars: {}, bestCombo: 0 };
+  prog.academy.bestStars = prog.academy.bestStars || {};
+  prog.academy.bestStars[lessonId] = Math.max(prog.academy.bestStars[lessonId] || 0, academyState.stars);
+  prog.academy.bestCombo = Math.max(prog.academy.bestCombo || 0, academyState.maxCombo);
+  saveProgress(prog);
+
   academyBeat.playFanfare();
 
   // Launch confetti
@@ -1759,6 +1828,10 @@ function finishAcademyLesson() {
     if (msg) {
       const lesson = ACADEMY_LESSONS[academyState.lessonIndex];
       msg.textContent = `Terrific! You completed ${lesson.title} with a combo streak of ${academyState.maxCombo}!`;
+    }
+    const modalStars = modal.querySelector('.text-2xl.text-amber-400');
+    if (modalStars) {
+      modalStars.textContent = '★'.repeat(academyState.stars) + '☆'.repeat(3 - academyState.stars);
     }
     modal.classList.remove('hidden');
   }
