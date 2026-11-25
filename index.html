@@ -26,7 +26,12 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3">
+        <!-- Touch Typing Academy Button -->
+        <button onclick="openAcademy()" class="text-xs font-bold px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-300 border border-emerald-500/40 hover:border-emerald-300 transition flex items-center gap-1.5 shadow-sm">
+          <span>🎓</span>
+          <span class="hidden sm:inline">Kids Academy</span>
+        </button>
         <!-- Audio effects toggle -->
         <button onclick="sounds.enabled = !sounds.enabled; this.textContent = sounds.enabled ? '🔊 Sound On' : '🔇 Muted';" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
           🔊 Sound On
@@ -50,6 +55,26 @@
         <p class="text-slate-400 text-base md:text-lg">
           Practice typing synchronized with YouTube music videos. Watch the video, let it pause on each line, and type directly on the screen to unpause!
         </p>
+      </div>
+
+      <!-- Touch Typing Academy Hero Banner for Kids & Beginners -->
+      <div onclick="openAcademy()" class="cursor-pointer max-w-4xl mx-auto mb-8 rounded-3xl bg-gradient-to-r from-teal-950/70 via-emerald-950/50 to-slate-900/90 border-2 border-emerald-500/40 hover:border-emerald-400 p-6 transition-all duration-300 hover:scale-[1.01] shadow-2xl flex flex-col md:flex-row items-center justify-between gap-5">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-3xl shadow-lg shadow-emerald-500/30 shrink-0">
+            🎹
+          </div>
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Kids & Beginners</span>
+              <span class="text-xs text-amber-400 font-bold">★ Built-in Synthesizer Beat</span>
+            </div>
+            <h3 class="text-xl font-black text-white">Touch Typing Academy: Home Row Beat Camp</h3>
+            <p class="text-xs text-slate-300 max-w-xl mt-1">Don't know how to type without looking? Learn finger placement on the F & J bump keys and jam to synthesized drum beats!</p>
+          </div>
+        </div>
+        <button class="shrink-0 px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
+          <span>Start Academy</span> <span>→</span>
+        </button>
       </div>
 
       <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -347,6 +372,141 @@
     </section>
 
   
+  
+
+    <!-- 5. TOUCH TYPING ACADEMY SCREEN (Kids & Beginners Home Row & Rhythm) -->
+    <section id="academyScreen" class="hidden py-6 animate-fade max-w-5xl mx-auto px-4">
+      
+      <!-- Top Academy Navigation & Beat Control Bar -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div>
+          <button onclick="showScreen('modeSelectScreen')" class="text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5 mb-2">
+            <span>←</span> Back to Main Menu
+          </button>
+          <div class="flex items-center gap-3">
+            <h2 class="text-2xl font-black text-white flex items-center gap-2">
+              <span>🎹</span> Touch Typing Academy
+            </h2>
+            <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase">
+              Home Row Rhythm
+            </span>
+          </div>
+        </div>
+
+        <!-- Synthesizer Beat Controls -->
+        <div class="flex items-center gap-3 bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 shadow-lg flex-wrap">
+          <button id="academyBeatToggleBtn" onclick="toggleAcademyBeat()" class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition flex items-center gap-1.5 shadow">
+            <span id="academyBeatIcon">⏸</span>
+            <span id="academyBeatLabel">Beat Playing</span>
+          </button>
+          
+          <!-- Tempo / BPM selector -->
+          <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+            <button onclick="setAcademyBpm(65)" id="bpmBtn65" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white font-bold transition">65 BPM</button>
+            <button onclick="setAcademyBpm(85)" id="bpmBtn85" class="px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold transition">85 BPM</button>
+            <button onclick="setAcademyBpm(105)" id="bpmBtn105" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white font-bold transition">105 BPM</button>
+          </div>
+
+          <!-- 4-Beat Rhythmic Metronome Lamps -->
+          <div class="flex items-center gap-1.5 pl-2 border-l border-slate-800" title="Rhythm 4/4 Beat: Kick & Snare">
+            <div id="beatLamp0" class="beat-lamp w-3 h-3 rounded-full bg-slate-700" title="Beat 1: Kick"></div>
+            <div id="beatLamp1" class="beat-lamp w-2.5 h-2.5 rounded-full bg-slate-700" title="Beat 2: Hi-Hat"></div>
+            <div id="beatLamp2" class="beat-lamp w-3 h-3 rounded-full bg-slate-700" title="Beat 3: Snare"></div>
+            <div id="beatLamp3" class="beat-lamp w-2.5 h-2.5 rounded-full bg-slate-700" title="Beat 4: Hi-Hat"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lesson Selection Tabs -->
+      <div id="academyLessonTabs" class="flex items-center gap-2 overflow-x-auto pb-3 mb-6 no-scrollbar">
+        <!-- Injected dynamically by app.js -->
+      </div>
+
+      <!-- Main Stage: Prompt & Finger Placement Box -->
+      <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 p-6 md:p-8 mb-6 shadow-2xl relative overflow-hidden text-center">
+        
+        <!-- Live Kid-Friendly Score Bar (Stars & Combo instead of adult WPM) -->
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800/80 flex-wrap gap-2">
+          <div class="flex items-center gap-1.5 text-xl" id="academyStars">
+            <span class="text-amber-400">★</span>
+            <span class="text-amber-400">★</span>
+            <span class="text-amber-400">★</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span id="academyComboLabel" class="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              🔥 Combo: <span id="academyComboCount">0</span>
+            </span>
+          </div>
+
+          <div class="text-xs font-mono text-slate-400">
+            Progress: <span id="academyProgressText" class="text-emerald-400 font-bold">0 / 12</span>
+          </div>
+        </div>
+
+        <!-- Big Beat Rhythm Stream Display -->
+        <div class="my-4">
+          <span class="text-[11px] uppercase font-extrabold text-slate-400 tracking-widest block mb-2">TYPE ON THE BEAT</span>
+          
+          <div id="academyPromptStream" class="flex items-center justify-center gap-2.5 min-h-[90px] font-mono-code text-2xl md:text-3xl font-black py-2 overflow-hidden flex-wrap">
+            <!-- Dynamic stream tokens -->
+          </div>
+        </div>
+
+        <!-- Finger Placement & Coach Banner -->
+        <div id="academyCoachBox" class="mt-4 inline-flex flex-col sm:flex-row items-center gap-3 bg-slate-950/80 border border-slate-800 rounded-2xl px-6 py-3 shadow-inner">
+          <div class="flex items-center gap-2 text-sm md:text-base">
+            <span id="academyHandIcon">🖐️</span>
+            <span id="academyHandInstruction" class="font-extrabold text-white">Left Hand: Index Finger on [F]</span>
+          </div>
+          <span class="hidden sm:inline text-slate-700">|</span>
+          <span id="academyLessonTip" class="text-xs text-amber-300/90 font-medium">Feel the raised physical bump on the key!</span>
+        </div>
+      </div>
+
+      <!-- ON-SCREEN COLOR-CODED KEYBOARD -->
+      <div class="rounded-3xl bg-slate-950/90 border-2 border-slate-800 p-5 md:p-7 shadow-2xl">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div class="flex items-center gap-2 text-xs font-bold text-slate-400">
+            <span>⌨️</span> <span>Touch-Typing Finger Map (Keep your eyes on the screen!)</span>
+          </div>
+          
+          <!-- Color Legend -->
+          <div class="flex items-center gap-3 text-[11px] font-semibold flex-wrap">
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span><span class="text-rose-300">Pinky</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span><span class="text-amber-300">Ring</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span><span class="text-emerald-300">Middle</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-cyan-500"></span><span class="text-cyan-300">Index</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span><span class="text-indigo-300">Thumb</span></div>
+          </div>
+        </div>
+
+        <div id="academyKeyboard" class="space-y-2 max-w-3xl mx-auto">
+          <!-- Populated by app.js -->
+        </div>
+      </div>
+
+      <!-- Lesson Completion Pop-up Modal -->
+      <div id="academySuccessModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-amber-500/50 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl animate-fade">
+          <span class="text-6xl block mb-3">🎉</span>
+          <div class="text-2xl text-amber-400 mb-2">★★★</div>
+          <h3 class="text-2xl font-black text-white mb-2">Lesson Complete!</h3>
+          <p id="academySuccessMessage" class="text-slate-300 text-sm mb-6">You kept the rhythm without looking at your hands!</p>
+          <div class="flex items-center justify-center gap-3">
+            <button onclick="restartAcademyLesson()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition">
+              Practice Again
+            </button>
+            <button onclick="nextAcademyLesson()" class="px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black uppercase tracking-wider transition shadow-lg shadow-emerald-500/20">
+              Next Lesson →
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+
   <!-- CUSTOM LYRICS & TIMINGS MODAL -->
   <div id="customLyricsModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl flex flex-col gap-4 animate-fade max-h-[90vh] overflow-y-auto">
